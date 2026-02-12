@@ -1,0 +1,61 @@
+# ============================================================================
+# robots.txt - 惠州仲恺中学官网
+# ============================================================================
+# 
+# 【新手指南】
+# robots.txt 用于告诉搜索引擎爬虫哪些页面可以抓取，哪些不可以。
+# 
+# 语法说明：
+# - User-agent: 指定爬虫类型，* 表示所有爬虫
+# - Allow: 允许抓取的路径
+# - Disallow: 禁止抓取的路径
+# - Sitemap: 网站地图的位置
+# 
+# 【注意事项】
+# - 不要禁止重要页面的抓取
+# - 可以禁止后台管理页面等敏感页面
+# - 修改后需要等待搜索引擎重新抓取
+# 
+
+# Google 爬虫
+User-agent: Googlebot
+Allow: /
+
+# Bing 爬虫
+User-agent: Bingbot
+Allow: /
+
+# 百度爬虫（重要：中国用户常用百度搜索）
+User-agent: Baiduspider
+Allow: /
+
+# 搜狗爬虫
+User-agent: Sogou
+Allow: /
+
+# 360 搜索爬虫
+User-agent: 360Spider
+Allow: /
+
+# 社交媒体爬虫
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+# 微信爬虫
+User-agent: Mozilla/5.0 (compatible; MicroMessengerBot)
+Allow: /
+
+# 所有其他爬虫
+User-agent: *
+Allow: /
+
+# 禁止抓取的路径（如果有）
+# Disallow: /admin/
+# Disallow: /api/
+# Disallow: /private/
+
+# 网站地图位置
+Sitemap: https://zkzxgzb.com/sitemap.xml
