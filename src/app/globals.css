@@ -1,13 +1,22 @@
+/**
+ * 全局样式文件 - 惠州仲恺中学官网
+ * Tailwind CSS 4.0 语法
+ */
+
 @import "tailwindcss";
 
+/* 自定义主题变量 */
 @theme {
   --color-zk-red: #8B0000;
   --color-zk-blue: #1E3A8A;
   --color-zk-gold: #F59E0B;
+  --color-zk-gray: #F3F4F6;
+  
   --font-sans: 'Noto Sans SC', system-ui, sans-serif;
   --font-serif: 'Noto Serif SC', Georgia, serif;
 }
 
+/* 基础样式 */
 body {
   font-family: var(--font-sans);
 }
@@ -16,6 +25,7 @@ html {
   scroll-behavior: smooth;
 }
 
+/* 组件样式 */
 .font-serif-sc {
   font-family: var(--font-serif);
 }
@@ -41,15 +51,30 @@ html {
   overflow: hidden;
 }
 
+/* 动画 */
 @keyframes fadeInUp {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in-up {
   animation: fadeInUp 0.6s ease-out forwards;
 }
 
-.delay-100 { animation-delay: 0.1s; }
-.delay-200 { animation-delay: 0.2s; }
-.delay-300 { animation-delay: 0.3s; }
+.delay-100 {
+  animation-delay: 0.1s;
+}
+
+.delay-200 {
+  animation-delay: 0.2s;
+}
+
+.delay-300 {
+  animation-delay: 0.3s;
+}
