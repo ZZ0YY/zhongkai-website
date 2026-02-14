@@ -7,6 +7,7 @@ import { Noto_Sans_SC, Noto_Serif_SC } from "next/font/google";
 import "./globals.css";
 import { Header, Footer } from "@/components/school";
 import { SCHOOL_INFO, SITE_CONFIG, PAGE_CONFIGS } from "@/lib/data";
+import { Analytics } from "@vercel/analytics/next";
 
 // 字体配置
 const notoSansSC = Noto_Sans_SC({
@@ -64,6 +65,7 @@ export default function RootLayout({
           </main>
           <Footer />
         </div>
+        <Analytics />
       </body>
     </html>
   );

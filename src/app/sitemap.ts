@@ -13,7 +13,7 @@ import {
   SITE_CONFIG 
 } from '@/lib/data';
 
-const baseUrl = SITE_CONFIG.url || 'https://zkzxgzb.com';
+const baseUrl = SITE_CONFIG.url || 'https://test.zkzxgzb.com';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
