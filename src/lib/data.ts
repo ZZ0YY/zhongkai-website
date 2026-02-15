@@ -447,7 +447,7 @@ export const HONORS_DATA: Honor[] = [
  */
 export const SITE_CONFIG = {
   name: "惠州仲恺中学",
-  url: "https://zkzxgzb.com", // 实际域名
+  url: "https://test.zkzxgzb.com", // 实际域名
   ogImage: "/og-image.png", // Open Graph 图片
   links: {
     wechat: "", // 微信公众号
