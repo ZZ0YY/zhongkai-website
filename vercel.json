@@ -17,15 +17,19 @@
     { "source": "/event-single.html", "destination": "/events", "permanent": true },
     { "source": "/teacher-single.html", "destination": "/teachers", "permanent": true },
     { "source": "/notice-single.html", "destination": "/news", "permanent": true }
-  ],
-  
-  "rewrites": [
-    {
-      "source": "/news/blog/:path*",
-      "destination": "https://zk-hexo.vercel.app/:path*"
-    }
-  ],
-  
+],
+
+"rewrites": [
+  {
+    "source": "/news/blog/:path*",
+    "destination": "https://hexo-zkzx.vercel.app/news/blog/:path*"
+  },
+  {
+    "source": "/news/blog/content.json",
+    "destination": "https://hexo-zkzx.vercel.app/news/blog/content.json"
+  }
+],
+
   "headers": [
     {
       "source": "/_next/static/(.*)",
