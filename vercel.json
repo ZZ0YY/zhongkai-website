@@ -22,11 +22,11 @@
 "rewrites": [
   {
     "source": "/news/blog/:path*",
-    "destination": "https://hexo-zkzx.vercel.app/news/blog/:path*"
+    "destination": "https://hexo-zkzx.vercel.app/:path*"
   },
   {
     "source": "/news/blog/content.json",
-    "destination": "https://hexo-zkzx.vercel.app/news/blog/content.json"
+    "destination": "https://hexo-zkzx.vercel.app/content.json"
   }
 ],
 
