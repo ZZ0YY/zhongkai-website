@@ -46,6 +46,8 @@ const nextConfig: NextConfig = {
     domains: [
       'cdn.20080601.xyz',
       'picsum.photos',
+      'photo.20080601.xyz',
+      'photo1.20080601.xyz',
     ],
   },
   
