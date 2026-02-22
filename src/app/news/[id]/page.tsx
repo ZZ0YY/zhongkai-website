@@ -4,40 +4,40 @@
  * ============================================================================
  * 
  * 【功能说明】
- * - 支持从 data.ts 读取基础数据
- * - 支持从 content/news/{id}.md 读取详细内容
+ * - 支持从本地 content/news/{id}.md 读取详细内容
+ * - 支持从远程 Hexo API 获取文章数据
+ * - 区分本地/远程文章，显示不同的跳转按钮
  * - SEO 友好的静态生成
  * 
- * 【如何添加新闻】
- * 1. 在 src/lib/data.ts 的 NEWS_DATA 中添加基础信息
- * 2. 在 content/news/{id}.md 中创建详细内容文件
+ * 【ISR 配置】
+ * revalidate = 60 (60秒重新验证)
  * 
- * 【MD 文件格式】
- * ---
- * title: 文章标题
- * date: 2024-01-15
- * author: 作者名称
- * tags: [标签1, 标签2]
- * ---
- * 
- * # 正文标题
- * 正文内容...
+ * 【如何区分本地/远程文章】
+ * 通过 post._source 字段判断：
+ * - 'local': 本地文章，显示本地内容
+ * - 'remote': 远程文章，底部显示"查看博客原贴"按钮
  */
 
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PageHeader, MarkdownRenderer, EmptyContent, ContentMeta } from "@/components/school";
-import { NEWS_DATA, SCHOOL_INFO } from "@/lib/data";
+import { PageHeader, MarkdownRenderer } from "@/components/school";
+import { SCHOOL_INFO, PAGE_CONFIGS, getCombinedPosts, getPostById } from "@/lib/data";
 import { getMarkdownContent } from "@/lib/markdown";
+
+// ============================================================================
+// ISR 配置 - 60秒重新验证
+// ============================================================================
+export const revalidate = 60;
 
 // ============================================================================
 // 静态参数生成（SSG）
 // ============================================================================
 
 export async function generateStaticParams() {
-  return NEWS_DATA.map((news) => ({
-    id: news.id.toString(),
+  const posts = await getCombinedPosts('news');
+  return posts.map((post) => ({
+    id: post.id.toString(),
   }));
 }
 
@@ -51,24 +51,23 @@ export async function generateMetadata({
   params: Promise<{ id: string }> 
 }): Promise<Metadata> {
   const { id } = await params;
-  const news = NEWS_DATA.find((n) => n.id.toString() === id);
+  const post = await getPostById('news', id);
   
-  if (!news) {
+  if (!post) {
     return { title: "新闻未找到" };
   }
   
   return {
-    title: `${news.title} - ${SCHOOL_INFO.name}`,
-    description: news.summary,
-    keywords: [news.category, SCHOOL_INFO.name],
-    // Open Graph 社交分享
+    title: `${post.title} - ${SCHOOL_INFO.name}`,
+    description: post.summary || post.title,
+    keywords: [post.category || '新闻', SCHOOL_INFO.name],
     openGraph: {
-      title: news.title,
-      description: news.summary,
+      title: post.title,
+      description: post.summary || post.title,
       type: 'article',
-      publishedTime: news.date,
-      authors: [SCHOOL_INFO.name],
-      images: [news.image],
+      publishedTime: post.date,
+      authors: post.author ? [post.author] : [SCHOOL_INFO.name],
+      images: [post.image],
     },
   };
 }
@@ -84,28 +83,32 @@ export default async function NewsDetailPage({
 }) {
   const { id } = await params;
   
-  // 查找新闻基础数据
-  const news = NEWS_DATA.find((n) => n.id.toString() === id);
+  // 获取文章数据
+  const post = await getPostById('news', id);
   
-  if (!news) {
+  if (!post) {
     notFound();
   }
   
-  // 尝试读取 Markdown 详细内容
+  // 判断文章来源
+  const isRemote = post._source === 'remote';
+  const blogSlug = post._slug;
+  
+  // 尝试读取本地 Markdown 详细内容
   const mdContent = getMarkdownContent('news', id);
   
-  // 决定使用哪个标题（优先使用 MD 文件中的标题）
+  // 决定使用哪个标题
   const title = mdContent.exists && mdContent.frontmatter.title 
     ? mdContent.frontmatter.title 
-    : news.title;
+    : post.title;
   
   return (
     <div>
       {/* 页面横幅 */}
       <PageHeader 
-        title={news.category} 
+        title={post.category || '新闻动态'} 
         subtitle={title}
-        bgImage={news.image}
+        bgImage={post.image}
       />
 
       {/* 文章内容 */}
@@ -131,30 +134,41 @@ export default async function NewsDetailPage({
             </h1>
             
             {/* 元信息 */}
-            <div className="flex items-center gap-4 text-sm text-gray-500 mb-8 pb-8 border-b border-gray-200">
-              <span className="bg-zk-red text-white px-3 py-1 rounded-full text-xs font-bold">
-                {news.category}
-              </span>
+            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-8 pb-8 border-b border-gray-200">
+              {post.category && (
+                <span className="bg-zk-red text-white px-3 py-1 rounded-full text-xs font-bold">
+                  {post.category}
+                </span>
+              )}
               <span className="flex items-center">
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                {mdContent.frontmatter.date || news.date}
+                {post.date}
               </span>
-              {mdContent.frontmatter.author && (
+              {post.author && (
                 <span className="flex items-center">
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  {mdContent.frontmatter.author}
+                  {post.author}
                 </span>
               )}
+              
+              {/* 来源标识 */}
+              <span className={`px-2 py-1 rounded text-xs ${
+                isRemote 
+                  ? 'bg-blue-100 text-zk-blue' 
+                  : 'bg-green-100 text-green-600'
+              }`}>
+                {isRemote ? '来自博客' : '本地文章'}
+              </span>
             </div>
             
             {/* 封面图 */}
             <div className="mb-8 rounded-lg overflow-hidden">
               <img 
-                src={news.image} 
+                src={post.image} 
                 alt={title} 
                 className="w-full h-auto"
                 loading="eager"
@@ -164,22 +178,23 @@ export default async function NewsDetailPage({
             {/* 文章正文 */}
             {mdContent.exists && mdContent.html ? (
               <MarkdownRenderer html={mdContent.html} />
+            ) : post.content ? (
+              <div className="prose prose-lg max-w-none">
+                <div dangerouslySetInnerHTML={{ __html: post.content.replace(/\n/g, '<br />') }} />
+              </div>
             ) : (
               <div className="prose prose-lg max-w-none">
                 <p className="text-gray-700 leading-relaxed mb-6">
-                  {news.summary}
-                </p>
-                <p className="text-gray-700 leading-relaxed mb-6">
-                  这是新闻的详细内容区域。如需添加完整内容，请在 content/news/{id}.md 文件中编写。
+                  {post.summary}
                 </p>
               </div>
             )}
             
             {/* 标签 */}
-            {mdContent.frontmatter.tags && mdContent.frontmatter.tags.length > 0 && (
+            {post.tags && post.tags.length > 0 && (
               <div className="mt-8 pt-8 border-t border-gray-200">
                 <span className="text-sm text-gray-500 mr-2">标签：</span>
-                {mdContent.frontmatter.tags.map((tag, index) => (
+                {post.tags.map((tag, index) => (
                   <span 
                     key={index}
                     className="inline-block px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm mr-2 mb-2"
@@ -190,20 +205,35 @@ export default async function NewsDetailPage({
               </div>
             )}
             
-            {/* 分享区域 */}
-            <div className="mt-12 pt-8 border-t border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-500 text-sm">分享到：</span>
-                <div className="flex gap-4">
-                  <button className="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition-colors">
-                    微
-                  </button>
-                  <button className="w-10 h-10 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors">
-                    微
-                  </button>
+            {/* 远程文章跳转按钮 */}
+            {isRemote && blogSlug && (
+              <div className="mt-12 p-6 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div>
+                    <h3 className="font-bold text-gray-900 mb-1">这篇文章来自博客</h3>
+                    <p className="text-sm text-gray-600">点击下方按钮查看博客原贴，获取更多内容</p>
+                  </div>
+                  <Link 
+                    href={`/news/blog/${blogSlug}`}
+                    className="px-6 py-3 bg-zk-blue text-white font-bold rounded-lg hover:bg-blue-800 transition-colors"
+                  >
+                    查看博客原贴 →
+                  </Link>
                 </div>
               </div>
-            </div>
+            )}
+            
+            {/* 本地文章提示 */}
+            {!isRemote && (
+              <div className="mt-12 p-6 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-green-700">这是官网原创文章</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>

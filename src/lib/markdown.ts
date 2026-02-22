@@ -79,6 +79,7 @@ const CONTENT_DIRS: Record<string, string> = {
   teachers: 'teachers',
   events: 'events',
   achievements: 'achievements',
+  software: 'software',
 };
 
 /**

@@ -219,6 +219,133 @@ export interface Honor {
 
 /**
  * ============================================================================
+ * 教学软件类型
+ * ============================================================================
+ */
+
+/**
+ * Software - 教学软件
+ * 用于教学软件分享展示
+ * 
+ * @property id - 唯一标识符
+ * @property title - 软件名称
+ * @property category - 软件分类（教学工具、学习资源、办公软件等）
+ * @property description - 软件简介
+ * @property image - 软件截图或图标
+ * @property platform - 适用平台（Windows、Mac、Web、iOS、Android）
+ * @property downloadUrl - 下载链接（可选）
+ * @property officialUrl - 官网链接（可选）
+ */
+export interface Software {
+  id: number;
+  title: string;
+  category: '教学工具' | '学习资源' | '办公软件' | '学科软件' | '其他';
+  description: string;
+  image: string;
+  platform: string[];
+  downloadUrl?: string;
+  officialUrl?: string;
+  tags?: string[];
+}
+
+/**
+ * ============================================================================
+ * Hexo 博客数据类型
+ * ============================================================================
+ */
+
+/**
+ * HexoCategory - Hexo 分类对象
+ * 
+ * 【说明】
+ * Hexo 的 categories 可能是字符串或对象
+ */
+export interface HexoCategory {
+  name: string;
+  slug?: string;
+  path?: string;
+}
+
+/**
+ * HexoPost - Hexo 文章数据结构
+ * 
+ * 【字段说明】
+ * 根据 hexo-generator-json-content 插件配置生成
+ * 
+ * @property title - 文章标题
+ * @property slug - URL 友好的短链接标识
+ * @property abbrlink - abbrlink 插件生成的短链接 ID
+ * @property date - 发布日期 (YYYY-MM-DD HH:mm:ss)
+ * @property updated - 更新日期
+ * @property cover - 封面图片 URL
+ * @property excerpt - 文章摘要
+ * @property description - 文章描述
+ * @property text - 文章正文（纯文本）
+ * @property categories - 分类数组
+ * @property tags - 标签数组
+ * @property author - 作者
+ * @property path - 文章路径
+ * @property permalink - 永久链接
+ */
+export interface HexoPost {
+  title: string;
+  slug: string;
+  abbrlink?: string;
+  date: string;
+  updated?: string;
+  cover?: string;
+  excerpt?: string;
+  description?: string;
+  text?: string;
+  categories?: (string | HexoCategory)[];
+  tags?: string[];
+  author?: string;
+  path?: string;
+  permalink?: string;
+  comments?: boolean;
+  keywords?: string[];
+}
+
+/**
+ * CombinedPost - 合并后的统一文章格式
+ * 
+ * 【数据来源】
+ * - local: 本地 content/ 目录的 MD 文件
+ * - remote: Hexo 博客 API
+ * 
+ * 【字段说明】
+ * @property _source - 数据来源 ('local' | 'remote')
+ * @property _slug - 远程文章的 slug（用于生成博客跳转链接）
+ */
+export interface CombinedPost {
+  id: number | string;
+  title: string;
+  date: string;
+  category?: string;
+  summary?: string;
+  image: string;
+  content?: string;
+  author?: string;
+  tags?: string[];
+  // 教师特有字段
+  name?: string;
+  title_field?: string;
+  subject?: string;
+  description?: string;
+  // 课程特有字段
+  type?: string;
+  features?: string[];
+  // 活动特有字段
+  month?: string;
+  day?: string;
+  location?: string;
+  // 内部字段
+  _source: 'local' | 'remote';
+  _slug: string | null;
+}
+
+/**
+ * ============================================================================
  * 页面配置类型
  * ============================================================================
  */

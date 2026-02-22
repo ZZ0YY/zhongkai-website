@@ -5,12 +5,16 @@
  * 
  * 【配置说明】
  * - assetPrefix: 生产环境下使用 CDN 加速静态资源
- * - images: 图片优化配置
+ * - images: 图片优化配置，支持多个图床域名
  * - redirects: 301 重定向保护 SEO 权重
  * 
  * 【CDN 配置】
  * 生产环境下，静态资源将通过 cdn.20080601.xyz 加载
- * 开发环境下保持默认配置
+ * 
+ * 【图床域名】
+ * - cdn.20080601.xyz: CDN 域名
+ * - picsum.photos: 占位图服务
+ * - p.inari.site: 常用图床
  */
 
 import type { NextConfig } from "next";
@@ -42,7 +46,32 @@ const nextConfig: NextConfig = {
   images: {
     // 生产环境下禁用 Next.js 图片优化（使用 CDN 处理）
     unoptimized: isProd,
-    // 允许的图片域名
+    
+    // 使用 remotePatterns 替代 domains（Next.js 推荐）
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'cdn.20080601.xyz',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+      },
+      {
+        protocol: 'https',
+        hostname: 'p.inari.site',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.inari.site',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.20080601.xyz',
+      },
+    ],
+    
+    // 保留 domains 以兼容旧版本
     domains: [
       'cdn.20080601.xyz',
       'picsum.photos',

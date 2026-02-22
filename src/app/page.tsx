@@ -3,25 +3,14 @@
  * 首页 - 惠州仲恺中学官网
  * ============================================================================
  * 
- * 【新手指南】
- * 这是网站的首页，包含以下模块：
- * 1. Hero 横幅区域 - 学校标语和主要信息
+ * 【页面模块】
+ * 1. Hero 横幅区域 - 学校标语和主要信息（含轮播图）
  * 2. 特色展示 - 学校三大特色
- * 3. 课程推荐 - 特色课程展示
- * 4. 新闻动态 - 最新新闻列表
- * 5. 校园活动 - 近期活动列表
- * 6. CTA 区域 - 招生咨询入口
- * 
- * 【如何修改内容】
- * - 轮播图：修改 src/lib/data.ts 中的 HERO_SLIDES
- * - 新闻：修改 NEWS_DATA
- * - 活动：修改 EVENTS_DATA
- * - 课程：修改 COURSES_DATA
- * 
- * 【Next.js 特点】
- * - 这是服务端组件（默认），数据直接从服务端获取
- * - 使用 Link 组件实现页面无刷新跳转
- * - metadata 导出用于设置页面 SEO
+ * 3. 博客入口 - 最新文章和博客链接
+ * 4. 课程推荐 - 特色课程展示
+ * 5. 新闻动态 - 最新新闻列表
+ * 6. 校园活动 - 近期活动列表
+ * 7. CTA 区域 - 招生咨询入口
  */
 
 import Link from "next/link";
@@ -30,9 +19,12 @@ import {
   NEWS_DATA, 
   EVENTS_DATA, 
   COURSES_DATA,
+  BLOG_URL,
+  getLatestPosts,
   PAGE_CONFIGS 
 } from "@/lib/data";
 import { Metadata } from "next";
+import ImageCarousel from "@/components/school/ImageCarousel";
 
 // ============================================================================
 // 页面元数据（SEO）
@@ -46,23 +38,25 @@ export const metadata: Metadata = {
 // ============================================================================
 // 首页组件
 // ============================================================================
-export default function HomePage() {
+export default async function HomePage() {
+  // 获取最新文章
+  const latestPosts = await getLatestPosts(6);
+  
   return (
     <div>
-      
       {/* ==================================================================
-          Hero 横幅区域
-          - 全屏背景图片
-          - 学校标语
-          - 行动按钮
+          Hero 横幅区域（含轮播图）
           ================================================================== */}
       <section className="relative h-[600px] md:h-[800px] flex items-center overflow-hidden">
-        {/* 背景图片 */}
+        {/* 轮播图背景 */}
         <div className="absolute inset-0 z-0">
-          <img 
-            src={HERO_SLIDES[0].image} 
-            alt="School Banner" 
-            className="w-full h-full object-cover"
+          <ImageCarousel 
+            images={HERO_SLIDES.map(slide => ({
+              src: slide.image,
+              alt: slide.title,
+              caption: slide.title,
+            }))}
+            autoPlayInterval={5000}
           />
           {/* 渐变遮罩 */}
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
@@ -107,13 +101,10 @@ export default function HomePage() {
 
       {/* ==================================================================
           特色展示区域
-          - 三个特色卡片
-          - 响应式布局
           ================================================================== */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            
             {/* 特色1：悠久历史 */}
             <div className="p-8 rounded-xl bg-gray-50 border border-gray-100 hover:shadow-xl transition-shadow">
               <div className="w-16 h-16 bg-red-100 text-zk-red rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">
@@ -151,14 +142,90 @@ export default function HomePage() {
       </section>
 
       {/* ==================================================================
-          课程推荐区域
-          - 展示特色课程
-          - 链接到课程页面
+          博客入口区域
           ================================================================== */}
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
-          
           {/* 区域标题 */}
+          <div className="flex justify-between items-end mb-12">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold font-serif-sc text-gray-900 mb-2">
+                校园博客
+              </h2>
+              <div className="h-1 w-20 bg-zk-blue"></div>
+            </div>
+            <Link 
+              href={BLOG_URL}
+              target="_blank"
+              className="text-zk-blue hover:text-zk-red font-semibold hidden md:flex items-center gap-2"
+            >
+              访问博客
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </Link>
+          </div>
+          
+          {/* 最新文章卡片 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {latestPosts.map((post) => (
+              <div 
+                key={post.id} 
+                className="group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300"
+              >
+                {/* 文章图片 */}
+                <div className="h-48 overflow-hidden">
+                  <img 
+                    src={post.image} 
+                    alt={post.title} 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                  />
+                </div>
+                
+                {/* 文章信息 */}
+                <div className="p-6">
+                  <div className="flex items-center gap-2 mb-3 text-xs text-gray-500">
+                    <span className="text-zk-red font-bold">{post.category}</span>
+                    <span>•</span>
+                    <span>{post.date}</span>
+                    {post._source === 'remote' && (
+                      <span className="bg-blue-100 text-zk-blue px-2 py-0.5 rounded">博客</span>
+                    )}
+                  </div>
+                  <h3 className="text-lg font-bold mb-2 group-hover:text-zk-red transition-colors line-clamp-2">
+                    {post._source === 'remote' ? (
+                      <Link href={`${BLOG_URL}/${post._slug}`} target="_blank">{post.title}</Link>
+                    ) : (
+                      <Link href={`/news/${post.id}`}>{post.title}</Link>
+                    )}
+                  </h3>
+                  <p className="text-gray-600 text-sm line-clamp-2">{post.summary}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* 博客入口按钮 */}
+          <div className="mt-12 text-center">
+            <Link 
+              href={BLOG_URL}
+              target="_blank"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-zk-blue text-white font-bold rounded-lg hover:bg-blue-800 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              访问校园博客
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ==================================================================
+          课程推荐区域
+          ================================================================== */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
           <div className="flex justify-between items-end mb-12">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold font-serif-sc text-gray-900 mb-2">
@@ -174,14 +241,12 @@ export default function HomePage() {
             </Link>
           </div>
           
-          {/* 课程卡片 */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {COURSES_DATA.slice(0, 3).map((course) => (
               <div 
                 key={course.id} 
                 className="group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300"
               >
-                {/* 课程图片 */}
                 <div className="h-48 overflow-hidden">
                   <img 
                     src={course.image} 
@@ -189,8 +254,6 @@ export default function HomePage() {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
                   />
                 </div>
-                
-                {/* 课程信息 */}
                 <div className="p-6">
                   <span className="text-xs font-bold text-zk-blue bg-blue-50 px-2 py-1 rounded mb-3 inline-block">
                     {course.type}
@@ -216,13 +279,10 @@ export default function HomePage() {
 
       {/* ==================================================================
           新闻动态 & 校园活动区域
-          - 左侧：新闻列表
-          - 右侧：活动列表
           ================================================================== */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-            
             {/* 新闻动态列 */}
             <div>
               <div className="flex justify-between items-center mb-10">
@@ -237,7 +297,6 @@ export default function HomePage() {
               <div className="space-y-8">
                 {NEWS_DATA.slice(0, 3).map((news) => (
                   <div key={news.id} className="flex gap-4 group">
-                    {/* 新闻缩略图 */}
                     <div className="w-24 h-24 shrink-0 rounded overflow-hidden">
                       <img 
                         src={news.image} 
@@ -245,8 +304,6 @@ export default function HomePage() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
                       />
                     </div>
-                    
-                    {/* 新闻信息 */}
                     <div>
                       <div className="flex items-center gap-2 mb-1 text-xs text-gray-500">
                         <span className="text-zk-red font-bold">{news.category}</span>
@@ -280,13 +337,10 @@ export default function HomePage() {
                     key={event.id} 
                     className={`flex items-center gap-6 ${idx !== EVENTS_DATA.length - 1 ? 'mb-6 pb-6 border-b border-gray-200' : ''}`}
                   >
-                    {/* 日期卡片 */}
                     <div className="bg-white border border-gray-200 rounded-lg p-3 text-center min-w-[80px] shadow-sm">
                       <span className="block text-2xl font-bold text-zk-red">{event.day}</span>
                       <span className="block text-xs text-gray-500 uppercase">{event.month}</span>
                     </div>
-                    
-                    {/* 活动信息 */}
                     <div>
                       <h4 className="text-lg font-bold mb-1 hover:text-zk-blue cursor-pointer transition-colors">
                         <Link href={`/events/${event.id}`}>{event.title}</Link>
@@ -311,7 +365,6 @@ export default function HomePage() {
           CTA 区域 - 招生咨询入口
           ================================================================== */}
       <section className="py-20 bg-zk-blue relative overflow-hidden">
-        {/* 背景纹理 */}
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
         
         <div className="container mx-auto px-4 relative z-10 text-center text-white">
