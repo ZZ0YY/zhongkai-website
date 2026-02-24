@@ -8,6 +8,7 @@
  * 2. 修复文章跳转链接，使用 abbrlink 作为文章 ID
  * 3. 优化分类映射，支持更多博客分类
  * 4. 域名统一为 www.zkzxgzb.com
+ * 5. 【修复】正确处理 Hexo categories 对象格式
  */
 
 import { 
@@ -260,6 +261,29 @@ export const SOFTWARE_DATA: Software[] = [
 ];
 
 // ============================================================================
+// 辅助函数
+// ============================================================================
+
+/**
+ * 从 Hexo 分类中提取分类名称
+ * 【重要】Hexo 的 categories 可能是字符串或对象 {name, slug, permalink}
+ */
+function extractCategoryName(cat: string | { name?: string; slug?: string } | null | undefined): string {
+  if (!cat) return '';
+  if (typeof cat === 'string') return cat;
+  if (typeof cat === 'object' && cat.name) return cat.name;
+  return '';
+}
+
+/**
+ * 从 Hexo 分类数组中提取分类名称数组
+ */
+function extractCategoryNames(categories: (string | { name?: string } | null)[] | null | undefined): string[] {
+  if (!categories || !Array.isArray(categories)) return [];
+  return categories.map(extractCategoryName).filter(Boolean);
+}
+
+// ============================================================================
 // 双源合并函数
 // ============================================================================
 
@@ -279,10 +303,9 @@ export async function getCombinedPosts(moduleName: string): Promise<CombinedPost
   // 2. 筛选属于该模块的文章
   const filteredRemotePosts = remotePosts.filter(post => {
     if (!post.categories || !Array.isArray(post.categories)) return false;
-    return post.categories.some(cat => {
-      const catName = typeof cat === 'string' ? cat : (cat.name || '');
-      return categoryNames.includes(catName);
-    });
+    // 使用辅助函数提取分类名称
+    const catNames = extractCategoryNames(post.categories);
+    return catNames.some(catName => categoryNames.includes(catName));
   });
   
   console.log(`[数据中心] 模块 ${moduleName} 找到 ${filteredRemotePosts.length} 篇远程文章`);
@@ -345,14 +368,26 @@ function getLocalData(moduleName: string): any[] {
 
 /**
  * 将 Hexo 文章转换为统一格式
+ * 【修复】正确处理 categories 和 tags 字段
  */
 function convertHexoPostToCombined(post: HexoPost, postId: string): CombinedPost {
   const dateStr = post.date ? post.date.split(' ')[0] : new Date().toISOString().split('T')[0];
   
+  // 【修复】使用辅助函数提取分类名称
   let category = '';
-  if (post.categories && Array.isArray(post.categories) && post.categories.length > 0) {
-    const firstCat = post.categories[0];
-    category = typeof firstCat === 'string' ? firstCat : (firstCat.name || '');
+  const catNames = extractCategoryNames(post.categories);
+  if (catNames.length > 0) {
+    category = catNames[0];
+  }
+  
+  // 【修复】确保 tags 是字符串数组
+  let tags: string[] = [];
+  if (post.tags && Array.isArray(post.tags)) {
+    tags = post.tags.map(tag => {
+      if (typeof tag === 'string') return tag;
+      if (typeof tag === 'object' && tag && 'name' in tag) return (tag as { name: string }).name;
+      return '';
+    }).filter(Boolean);
   }
   
   return {
@@ -364,7 +399,7 @@ function convertHexoPostToCombined(post: HexoPost, postId: string): CombinedPost
     image: post.cover || 'https://picsum.photos/600/400?random=' + Math.random(),
     content: post.text || '',
     author: post.author || '',
-    tags: post.tags || [],
+    tags: tags,
     _source: 'remote',
     _slug: post.slug || postId,
   };
