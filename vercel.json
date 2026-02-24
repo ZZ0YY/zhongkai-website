@@ -30,22 +30,18 @@
   ],
   "rewrites": [
     {
-      "comment": "博客首页重写规则 - 域名已更新为 www.zkzxgzb.com",
       "source": "/news/blog",
       "destination": "https://hexo-zkzx.vercel.app/"
     },
     {
-      "comment": "博客文章重写规则 - 支持 abbrlink 格式",
       "source": "/news/blog/:abbrlink",
       "destination": "https://hexo-zkzx.vercel.app/:abbrlink"
     },
     {
-      "comment": "博客静态资源",
       "source": "/news/blog/:path*",
       "destination": "https://hexo-zkzx.vercel.app/:path*"
     },
     {
-      "comment": "博客 content.json API",
       "source": "/news/blog/content.json",
       "destination": "https://hexo-zkzx.vercel.app/content.json"
     }
