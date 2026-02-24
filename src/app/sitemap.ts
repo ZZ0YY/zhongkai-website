@@ -13,7 +13,7 @@
 import { MetadataRoute } from 'next';
 import { SITE_CONFIG, getPostIds } from '@/lib/data';
 
-const baseUrl = SITE_CONFIG.url || 'https://test.zkzxgzb.com';
+const baseUrl = SITE_CONFIG.url || 'https://www.zkzxgzb.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();

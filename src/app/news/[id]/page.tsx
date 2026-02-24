@@ -3,26 +3,16 @@
  * 新闻详情页面 - 惠州仲恺中学官网
  * ============================================================================
  * 
- * 【功能说明】
- * - 支持从本地 content/news/{id}.md 读取详细内容
- * - 支持从远程 Hexo API 获取文章数据
- * - 区分本地/远程文章，显示不同的跳转按钮
- * - SEO 友好的静态生成
- * 
- * 【ISR 配置】
- * revalidate = 60 (60秒重新验证)
- * 
- * 【如何区分本地/远程文章】
- * 通过 post._source 字段判断：
- * - 'local': 本地文章，显示本地内容
- * - 'remote': 远程文章，底部显示"查看博客原贴"按钮
+ * 【修复说明】
+ * 1. 远程文章点击跳转到博客时，使用正确的链接格式
+ * 2. 修复跳转链接为 BLOG_URL/abbrlink 格式
  */
 
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader, MarkdownRenderer } from "@/components/school";
-import { SCHOOL_INFO, PAGE_CONFIGS, getCombinedPosts, getPostById } from "@/lib/data";
+import { SCHOOL_INFO, PAGE_CONFIGS, BLOG_URL, getCombinedPosts, getPostById } from "@/lib/data";
 import { getMarkdownContent } from "@/lib/markdown";
 
 // ============================================================================
@@ -101,6 +91,9 @@ export default async function NewsDetailPage({
   const title = mdContent.exists && mdContent.frontmatter.title 
     ? mdContent.frontmatter.title 
     : post.title;
+  
+  // 博客文章跳转链接：使用 BLOG_URL + slug/abbrlink
+  const blogPostUrl = blogSlug ? `${BLOG_URL}/${blogSlug}` : BLOG_URL;
   
   return (
     <div>
@@ -214,7 +207,9 @@ export default async function NewsDetailPage({
                     <p className="text-sm text-gray-600">点击下方按钮查看博客原贴，获取更多内容</p>
                   </div>
                   <Link 
-                    href={`/news/blog/${blogSlug}`}
+                    href={blogPostUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="px-6 py-3 bg-zk-blue text-white font-bold rounded-lg hover:bg-blue-800 transition-colors"
                   >
                     查看博客原贴 →

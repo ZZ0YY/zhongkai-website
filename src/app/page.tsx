@@ -3,14 +3,9 @@
  * 首页 - 惠州仲恺中学官网
  * ============================================================================
  * 
- * 【页面模块】
- * 1. Hero 横幅区域 - 学校标语和主要信息（含轮播图）
- * 2. 特色展示 - 学校三大特色
- * 3. 博客入口 - 最新文章和博客链接
- * 4. 课程推荐 - 特色课程展示
- * 5. 新闻动态 - 最新新闻列表
- * 6. 校园活动 - 近期活动列表
- * 7. CTA 区域 - 招生咨询入口
+ * 【修复说明】
+ * 1. 轮播图添加 heroMode={true}，确保按钮在遮罩层之上可点击
+ * 2. 调整层级结构，轮播图容器 z-index 为 z-10，遮罩层为 z-20，内容为 z-30
  */
 
 import Link from "next/link";
@@ -46,10 +41,11 @@ export default async function HomePage() {
     <div>
       {/* ==================================================================
           Hero 横幅区域（含轮播图）
+          【修复】添加 heroMode，调整 z-index 层级
           ================================================================== */}
       <section className="relative h-[600px] md:h-[800px] flex items-center overflow-hidden">
-        {/* 轮播图背景 */}
-        <div className="absolute inset-0 z-0">
+        {/* 轮播图背景 - z-10 */}
+        <div className="absolute inset-0 z-10">
           <ImageCarousel 
             images={HERO_SLIDES.map(slide => ({
               src: slide.image,
@@ -57,13 +53,15 @@ export default async function HomePage() {
               caption: slide.title,
             }))}
             autoPlayInterval={5000}
+            heroMode={true}
           />
-          {/* 渐变遮罩 */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
         </div>
         
-        {/* 内容区域 */}
-        <div className="container mx-auto px-4 relative z-10 text-white">
+        {/* 渐变遮罩 - z-20（在轮播图之上，但按钮通过 heroMode 有 z-30） */}
+        <div className="absolute inset-0 z-20 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+        
+        {/* 内容区域 - z-30 */}
+        <div className="container mx-auto px-4 relative z-30 text-white">
           <div className="max-w-3xl">
             {/* 建校年份标签 */}
             <span className="inline-block px-4 py-1 mb-6 border border-zk-gold text-zk-gold rounded-full text-sm font-bold tracking-wider uppercase animate-fade-in">
@@ -194,7 +192,7 @@ export default async function HomePage() {
                   </div>
                   <h3 className="text-lg font-bold mb-2 group-hover:text-zk-red transition-colors line-clamp-2">
                     {post._source === 'remote' ? (
-                      <Link href={`${BLOG_URL}/${post._slug}`} target="_blank">{post.title}</Link>
+                      <Link href={`/news/${post.id}`} target="_blank">{post.title}</Link>
                     ) : (
                       <Link href={`/news/${post.id}`}>{post.title}</Link>
                     )}

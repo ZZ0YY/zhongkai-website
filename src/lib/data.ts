@@ -3,46 +3,11 @@
  * 数据中心 - 惠州仲恺中学官网
  * ============================================================================
  * 
- * 【功能说明】
- * 1. 支持从远程 Hexo 博客 API 获取文章数据（含完整 MD 正文）
- * 2. 支持从本地 content/ 目录读取 MD 文件
- * 3. 双源合并，本地文件优先
- * 4. 按分类自动映射到不同模块
- * 5. 按时间倒序排列
- * 
- * 【数据源】
- * - 远程 API: https://test.zkzxgzb.com/news/blog/content.json
- * - 本地目录: content/{news,courses,teachers,events,achievements,software}/
- * 
- * 【分类映射】
- * - "新闻动态" -> News 模块
- * - "课程教学" -> Courses 模块
- * - "师资力量" -> Teachers 模块
- * - "校园活动" -> Events 模块
- * - "办学成果" -> Achievements 模块
- * 
- * 【ISR 配置】
- * revalidate = 60 (60秒重新验证)
- * 
- * 【Hexo 配置建议】
- * 在博客的 _config.yml 中配置 hexo-generator-json-content：
- * 
- * jsonContent:
- *   meta: false
- *   drafts: false
- *   file: content.json
- *   pages: false
- *   posts:
- *     title: true
- *     slug: true
- *     abbrlink: true
- *     date: true
- *     cover: true
- *     excerpt: true
- *     categories: true
- *     tags: true
- *     text: true        # 包含完整正文
- *     author: true
+ * 【修复说明】
+ * 1. 统一博客 URL 配置，确保与博客部署地址一致
+ * 2. 修复文章跳转链接，使用 abbrlink 作为文章 ID
+ * 3. 优化分类映射，支持更多博客分类
+ * 4. 域名统一为 www.zkzxgzb.com
  */
 
 import { 
@@ -64,12 +29,18 @@ import {
 export const revalidate = 60;
 
 // ============================================================================
-// 远程 API 配置
+// 博客 URL 配置（统一配置，便于维护）
 // ============================================================================
-const HEXO_API_URL = 'https://test.zkzxgzb.com/news/blog/content.json';
+/**
+ * 【重要】博客部署地址
+ * 博客嵌入官网路径：/news/blog/
+ */
+export const BLOG_URL = 'https://www.zkzxgzb.com/news/blog';
 
-// 博客地址
-export const BLOG_URL = 'https://test.zkzxgzb.com/news/blog';
+/**
+ * 博客 API 地址（content.json）
+ */
+const HEXO_API_URL = `${BLOG_URL}/content.json`;
 
 // ============================================================================
 // 分类映射配置
@@ -79,21 +50,25 @@ export const BLOG_URL = 'https://test.zkzxgzb.com/news/blog';
  */
 const CATEGORY_MAP: Record<string, string> = {
   '新闻动态': 'news',
+  '校园新闻': 'news',
+  '通知公告': 'news',
+  '教务动态': 'news',
+  '校园活动': 'events',
   '课程教学': 'courses',
   '师资力量': 'teachers',
-  '校园活动': 'events',
   '办学成果': 'achievements',
+  '荣誉时刻': 'achievements',
 };
 
 /**
  * 反向映射：模块名 -> Hexo 分类名
  */
-const MODULE_TO_CATEGORY: Record<string, string> = {
-  'news': '新闻动态',
-  'courses': '课程教学',
-  'teachers': '师资力量',
-  'events': '校园活动',
-  'achievements': '办学成果',
+const MODULE_TO_CATEGORY: Record<string, string[]> = {
+  'news': ['新闻动态', '校园新闻', '通知公告', '教务动态'],
+  'courses': ['课程教学'],
+  'teachers': ['师资力量'],
+  'events': ['校园活动'],
+  'achievements': ['办学成果', '荣誉时刻'],
 };
 
 // ============================================================================
@@ -154,16 +129,16 @@ export const HERO_SLIDES = [
 
 /**
  * 从 Hexo 博客 API 获取文章数据
- * 
- * 【性能说明】
- * - 包含完整正文，JSON 文件约 3MB
- * - ISR 缓存 60 秒，不会每次请求都拉取
- * - Vercel 内网通信，延迟很低
  */
 async function fetchHexoPosts(): Promise<HexoPost[]> {
   try {
+    console.log(`[数据中心] 正在获取博客数据: ${HEXO_API_URL}`);
+    
     const response = await fetch(HEXO_API_URL, {
-      next: { revalidate: 60 }, // ISR: 60秒缓存
+      next: { revalidate: 60 },
+      headers: {
+        'Accept': 'application/json',
+      },
     });
     
     if (!response.ok) {
@@ -290,13 +265,10 @@ export const SOFTWARE_DATA: Software[] = [
 
 /**
  * 获取合并后的文章数据
- * 
- * @param moduleName - 模块名称 (news/courses/teachers/events/achievements)
- * @returns 合并后的文章数组（按时间倒序）
  */
 export async function getCombinedPosts(moduleName: string): Promise<CombinedPost[]> {
-  const categoryName = MODULE_TO_CATEGORY[moduleName];
-  if (!categoryName) {
+  const categoryNames = MODULE_TO_CATEGORY[moduleName];
+  if (!categoryNames) {
     console.warn(`[数据中心] 未知的模块名: ${moduleName}`);
     return [];
   }
@@ -308,9 +280,8 @@ export async function getCombinedPosts(moduleName: string): Promise<CombinedPost
   const filteredRemotePosts = remotePosts.filter(post => {
     if (!post.categories || !Array.isArray(post.categories)) return false;
     return post.categories.some(cat => {
-      if (typeof cat === 'string') return cat === categoryName;
-      if (typeof cat === 'object' && cat.name) return cat.name === categoryName;
-      return false;
+      const catName = typeof cat === 'string' ? cat : (cat.name || '');
+      return categoryNames.includes(catName);
     });
   });
   
@@ -322,7 +293,7 @@ export async function getCombinedPosts(moduleName: string): Promise<CombinedPost
   // 4. 合并数据
   const combinedPosts: CombinedPost[] = [];
   
-  // 添加本地数据（标记为本地来源）
+  // 添加本地数据
   localData.forEach(item => {
     combinedPosts.push({
       ...item,
@@ -331,14 +302,18 @@ export async function getCombinedPosts(moduleName: string): Promise<CombinedPost
     });
   });
   
-  // 添加远程数据（标记为远程来源）
+  // 添加远程数据（使用 abbrlink 作为唯一标识）
   filteredRemotePosts.forEach(post => {
+    // 使用 abbrlink 作为 ID（如果有的话）
+    const postId = post.abbrlink || post.slug || Math.random().toString(36).substr(2, 9);
+    
+    // 检查是否已存在相同 ID 或标题的文章
     const existingIndex = combinedPosts.findIndex(
-      item => item.id.toString() === post.abbrlink || item.title === post.title
+      item => item.id.toString() === postId.toString() || item.title === post.title
     );
     
     if (existingIndex === -1) {
-      combinedPosts.push(convertHexoPostToCombined(post));
+      combinedPosts.push(convertHexoPostToCombined(post, postId.toString()));
     }
   });
   
@@ -370,14 +345,10 @@ function getLocalData(moduleName: string): any[] {
 
 /**
  * 将 Hexo 文章转换为统一格式
- * 
- * 【重要】保留完整正文内容
  */
-function convertHexoPostToCombined(post: HexoPost): CombinedPost {
-  // 解析日期格式 (YYYY-MM-DD HH:mm:ss -> YYYY-MM-DD)
+function convertHexoPostToCombined(post: HexoPost, postId: string): CombinedPost {
   const dateStr = post.date ? post.date.split(' ')[0] : new Date().toISOString().split('T')[0];
   
-  // 获取分类
   let category = '';
   if (post.categories && Array.isArray(post.categories) && post.categories.length > 0) {
     const firstCat = post.categories[0];
@@ -385,17 +356,17 @@ function convertHexoPostToCombined(post: HexoPost): CombinedPost {
   }
   
   return {
-    id: post.abbrlink || Math.random().toString(36).substr(2, 9),
+    id: postId,
     title: post.title || '无标题',
     date: dateStr,
     category: category,
     summary: post.excerpt || post.description || '',
     image: post.cover || 'https://picsum.photos/600/400?random=' + Math.random(),
-    content: post.text || '',  // 完整正文
+    content: post.text || '',
     author: post.author || '',
     tags: post.tags || [],
     _source: 'remote',
-    _slug: post.slug || post.abbrlink || '',
+    _slug: post.slug || postId,
   };
 }
 
@@ -408,7 +379,7 @@ export async function getPostById(moduleName: string, id: string): Promise<Combi
 }
 
 /**
- * 获取所有文章的 ID（用于静态路径生成）
+ * 获取所有文章的 ID
  */
 export async function getPostIds(moduleName: string): Promise<string[]> {
   const posts = await getCombinedPosts(moduleName);
@@ -416,23 +387,18 @@ export async function getPostIds(moduleName: string): Promise<string[]> {
 }
 
 /**
- * 获取最新文章（用于首页展示）
- * 
- * @param limit - 返回数量
- * @returns 按时间排序的最新文章
+ * 获取最新文章
  */
 export async function getLatestPosts(limit: number = 6): Promise<CombinedPost[]> {
   const allPosts: CombinedPost[] = [];
   
-  // 获取所有模块的文章
-  const modules = ['news', 'courses', 'events', 'achievements'];
+  const modules = ['news', 'events', 'achievements'];
   
   for (const moduleName of modules) {
     const posts = await getCombinedPosts(moduleName);
     allPosts.push(...posts);
   }
   
-  // 按日期排序
   allPosts.sort((a, b) => {
     const dateA = new Date(a.date || '1970-01-01').getTime();
     const dateB = new Date(b.date || '1970-01-01').getTime();
@@ -447,7 +413,7 @@ export async function getLatestPosts(limit: number = 6): Promise<CombinedPost[]>
 // ============================================================================
 export const SITE_CONFIG = {
   name: "惠州仲恺中学",
-  url: "https://zkzxgzb.com",
+  url: "https://www.zkzxgzb.com",
   ogImage: "/og-image.png",
   links: {
     wechat: "",
