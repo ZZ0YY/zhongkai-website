@@ -107,7 +107,7 @@ export default async function AchievementsPage() {
                   </div>
                   
                   <h3 className="text-xl font-bold mb-3 text-gray-900 line-clamp-2 hover:text-zk-blue">
-                    <Link href={`/news/${news.id}`}>{news.title}</Link>
+                    <Link href={`/achievements/${news.id}`}>{news.title}</Link>
                   </h3>
                   
                   <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow">
@@ -115,7 +115,7 @@ export default async function AchievementsPage() {
                   </p>
                   
                   <Link 
-                    href={`/news/${news.id}`} 
+                    href={`/achievements/${news.id}`} 
                     className="inline-block text-center w-full py-2 border border-gray-200 rounded text-sm font-bold text-gray-600 hover:bg-zk-red hover:text-white hover:border-zk-red transition-colors mt-auto"
                   >
                     查看详情
