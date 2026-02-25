@@ -10,27 +10,9 @@
  * 3. 将 Markdown 转换为 HTML
  * 4. 提供类型安全的内容获取接口
  * 
- * 【目录结构】
- * content/
- * ├── news/           # 新闻文章
- * │   ├── 1.md        # ID 为 1 的新闻
- * │   └── 2.md
- * ├── courses/        # 课程介绍
- * ├── teachers/       # 教师介绍
- * ├── events/         # 活动详情
- * └── achievements/   # 成果展示
- * 
- * 【MD 文件格式示例】
- * ---
- * title: 文章标题
- * date: 2024-01-15
- * author: 作者名称
- * tags: [标签1, 标签2]
- * ---
- * 
- * # 正文标题
- * 
- * 正文内容...
+ * 【修复说明】
+ * - 导出 parseFrontmatter 和 markdownToHtml 函数供外部使用
+ * - 添加统一换行符处理，防止 Windows 换行符导致解析失败
  */
 
 import fs from 'fs';
@@ -93,7 +75,7 @@ function getContentDir(): string {
 }
 
 // ============================================================================
-// Markdown 解析函数
+// Markdown 解析函数（已导出）
 // ============================================================================
 
 /**
@@ -111,24 +93,27 @@ function getContentDir(): string {
  * 正文内容
  * `);
  */
-function parseFrontmatter(content: string): { frontmatter: MarkdownFrontmatter; content: string } {
+export function parseFrontmatter(content: string): { frontmatter: MarkdownFrontmatter; content: string } {
+  // 【关键修复】统一换行符，防止 Windows 换行符导致解析失败
+  const normalizedContent = content.replace(/\r\n/g, '\n');
+  
   // 默认值
-  const defaultResult = { frontmatter: {}, content };
+  const defaultResult = { frontmatter: {}, content: normalizedContent };
   
   // 检查是否以 --- 开头
-  if (!content.startsWith('---')) {
+  if (!normalizedContent.startsWith('---')) {
     return defaultResult;
   }
   
   // 查找结束的 ---
-  const endIndex = content.indexOf('---', 3);
+  const endIndex = normalizedContent.indexOf('---', 3);
   if (endIndex === -1) {
     return defaultResult;
   }
   
   // 提取 frontmatter 文本
-  const frontmatterText = content.slice(3, endIndex).trim();
-  const bodyContent = content.slice(endIndex + 3).trim();
+  const frontmatterText = normalizedContent.slice(3, endIndex).trim();
+  const bodyContent = normalizedContent.slice(endIndex + 3).trim();
   
   // 解析 frontmatter（简单的键值对解析）
   const frontmatter: MarkdownFrontmatter = {};
@@ -169,8 +154,16 @@ function parseFrontmatter(content: string): { frontmatter: MarkdownFrontmatter; 
  * @param markdown - Markdown 文本
  * @returns HTML 字符串
  */
-function markdownToHtml(markdown: string): string {
-  let html = markdown;
+export function markdownToHtml(markdown: string): string {
+  // 【关键修复】统一换行符，防止 Windows 换行符导致图片和代码块解析失败
+  const normalizedMarkdown = markdown.replace(/\r\n/g, '\n');
+  let html = normalizedMarkdown;
+  
+  // -----------------------------------------------------------------------
+  // 代码块：```代码``` → <pre><code>代码</code></pre>
+  // 【注意】必须先处理代码块，避免被其他规则干扰
+  // -----------------------------------------------------------------------
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
   
   // -----------------------------------------------------------------------
   // 标题转换：# 标题 → <h1>标题</h1>
@@ -180,6 +173,17 @@ function markdownToHtml(markdown: string): string {
   html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
   
   // -----------------------------------------------------------------------
+  // 图片：![alt](URL) → <img src="URL" alt="alt" />
+  // 【注意】图片必须在链接之前处理
+  // -----------------------------------------------------------------------
+  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" loading="lazy" class="max-w-full h-auto rounded-lg shadow-md mx-auto my-4" />');
+  
+  // -----------------------------------------------------------------------
+  // 链接：[文本](URL) → <a href="URL">文本</a>
+  // -----------------------------------------------------------------------
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-zk-blue hover:underline">$1</a>');
+  
+  // -----------------------------------------------------------------------
   // 粗体和斜体
   // -----------------------------------------------------------------------
   html = html.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
@@ -187,35 +191,20 @@ function markdownToHtml(markdown: string): string {
   html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
   
   // -----------------------------------------------------------------------
-  // 链接：[文本](URL) → <a href="URL">文本</a>
-  // -----------------------------------------------------------------------
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-  
-  // -----------------------------------------------------------------------
-  // 图片：![alt](URL) → <img src="URL" alt="alt" />
-  // -----------------------------------------------------------------------
-  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" loading="lazy" />');
-  
-  // -----------------------------------------------------------------------
-  // 代码块：```代码``` → <pre><code>代码</code></pre>
-  // -----------------------------------------------------------------------
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
-  
-  // -----------------------------------------------------------------------
   // 行内代码：`代码` → <code>代码</code>
   // -----------------------------------------------------------------------
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  html = html.replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-2 py-1 rounded text-zk-red">$1</code>');
   
   // -----------------------------------------------------------------------
   // 引用块：> 文本 → <blockquote>文本</blockquote>
   // -----------------------------------------------------------------------
-  html = html.replace(/^> (.*$)/gm, '<blockquote>$1</blockquote>');
+  html = html.replace(/^> (.*$)/gm, '<blockquote class="border-l-4 border-zk-gold bg-gray-50 py-4 px-6 italic my-4">$1</blockquote>');
   
   // -----------------------------------------------------------------------
   // 无序列表
   // -----------------------------------------------------------------------
   html = html.replace(/^\- (.*$)/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul class="list-disc pl-6 my-4">$&</ul>');
   
   // -----------------------------------------------------------------------
   // 有序列表
@@ -225,12 +214,11 @@ function markdownToHtml(markdown: string): string {
   // -----------------------------------------------------------------------
   // 水平线：--- → <hr />
   // -----------------------------------------------------------------------
-  html = html.replace(/^---$/gm, '<hr />');
+  html = html.replace(/^---$/gm, '<hr class="border-gray-200 my-8" />');
   
   // -----------------------------------------------------------------------
   // 段落：连续的文本包裹在 <p> 中
   // -----------------------------------------------------------------------
-  // 将连续的非标签文本包裹在段落中
   const lines = html.split('\n');
   const processedLines: string[] = [];
   let inParagraph = false;
@@ -242,7 +230,7 @@ function markdownToHtml(markdown: string): string {
     // 空行：结束当前段落
     if (trimmedLine === '') {
       if (inParagraph && paragraphContent) {
-        processedLines.push(`<p>${paragraphContent}</p>`);
+        processedLines.push(`<p class="text-gray-700 leading-relaxed mb-4">${paragraphContent}</p>`);
         paragraphContent = '';
         inParagraph = false;
       }
@@ -252,7 +240,7 @@ function markdownToHtml(markdown: string): string {
     // 已经是 HTML 标签的行：结束当前段落，直接添加
     if (trimmedLine.startsWith('<')) {
       if (inParagraph && paragraphContent) {
-        processedLines.push(`<p>${paragraphContent}</p>`);
+        processedLines.push(`<p class="text-gray-700 leading-relaxed mb-4">${paragraphContent}</p>`);
         paragraphContent = '';
         inParagraph = false;
       }
@@ -271,7 +259,7 @@ function markdownToHtml(markdown: string): string {
   
   // 处理最后一个段落
   if (inParagraph && paragraphContent) {
-    processedLines.push(`<p>${paragraphContent}</p>`);
+    processedLines.push(`<p class="text-gray-700 leading-relaxed mb-4">${paragraphContent}</p>`);
   }
   
   return processedLines.join('\n');

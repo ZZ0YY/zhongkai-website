@@ -1,7 +1,5 @@
 /**
- * ============================================================================
- * 新闻详情页面 - 惠州仲恺中学官网
- * ============================================================================
+ * 办学成果详情页面 - 支持从 content/achievements/{id}.md 读取详细内容
  * 
  * 【关键修复】
  * 1. 导入 parseFrontmatter 和 markdownToHtml 用于渲染 Hexo 文章
@@ -13,84 +11,44 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader, MarkdownRenderer } from "@/components/school";
-import { SCHOOL_INFO, PAGE_CONFIGS, BLOG_URL, getPostById, getCombinedPosts } from "@/lib/data";
+import { SCHOOL_INFO, BLOG_URL, getPostById, getCombinedPosts } from "@/lib/data";
 import { getMarkdownContent, parseFrontmatter, markdownToHtml } from "@/lib/markdown";
 
-// ============================================================================
-// ISR 配置 - 60秒重新验证
-// ============================================================================
-export const revalidate = 60;
-
-// ============================================================================
-// 静态参数生成（SSG）
-// ============================================================================
-
 export async function generateStaticParams() {
-  const posts = await getCombinedPosts('news');
+  const posts = await getCombinedPosts('achievements');
   return posts.map((post) => ({
     id: post.id.toString(),
   }));
 }
 
-// ============================================================================
-// 元数据生成（SEO）
-// ============================================================================
-
-export async function generateMetadata({ 
-  params 
-}: { 
-  params: Promise<{ id: string }> 
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const post = await getPostById('news', id);
+  const post = await getPostById('achievements', id);
   
-  if (!post) {
-    return { title: "新闻未找到" };
-  }
+  if (!post) return { title: "成果未找到" };
   
   return {
     title: `${post.title} - ${SCHOOL_INFO.name}`,
     description: post.summary || post.title,
-    keywords: [post.category || '新闻', SCHOOL_INFO.name],
-    openGraph: {
-      title: post.title,
-      description: post.summary || post.title,
-      type: 'article',
-      publishedTime: post.date,
-      authors: post.author ? [post.author] : [SCHOOL_INFO.name],
-      images: [post.image],
-    },
   };
 }
 
-// ============================================================================
-// 页面组件
-// ============================================================================
-
-export default async function NewsDetailPage({ 
-  params 
-}: { 
-  params: Promise<{ id: string }> 
-}) {
+export default async function AchievementDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  
-  // 获取文章数据
-  const post = await getPostById('news', id);
+  const post = await getPostById('achievements', id);
   
   if (!post) {
     notFound();
   }
   
-  // 判断文章来源
   const isRemote = post._source === 'remote';
   
   // 尝试读取本地 Markdown 详细内容
-  const mdContent = getMarkdownContent('news', id);
+  const mdContent = getMarkdownContent('achievements', id);
   
   // 【关键修复】处理 Markdown 渲染逻辑
   let finalHtml = '';
   if (mdContent.exists && mdContent.html) {
-    // 本地优先
     finalHtml = mdContent.html;
   } else if (post.content) {
     // 【关键修复】解析 Hexo 发来的 raw 数据，剥离顶部的 --- yaml 配置 ---
@@ -99,56 +57,38 @@ export default async function NewsDetailPage({
   }
   
   // 【关键修复】计算博客跳转链接
-  // 优先使用 Hexo 传来的 permalink，没有则利用 BLOG_URL 和 path 拼接
   let blogPostUrl = BLOG_URL;
   if (post._permalink) {
     blogPostUrl = post._permalink;
   } else if (post._path) {
-    // 确保 path 以斜杠结尾
     const pathSuffix = post._path.endsWith('/') ? post._path : `${post._path}/`;
     blogPostUrl = `${BLOG_URL}/${pathSuffix}`;
   }
   
-  // 决定使用哪个标题
   const title = mdContent.exists && mdContent.frontmatter.title 
     ? mdContent.frontmatter.title 
     : post.title;
   
   return (
     <div>
-      {/* 页面横幅 */}
-      <PageHeader 
-        title={post.category || '新闻动态'} 
-        subtitle={title}
-        bgImage={post.image}
-      />
+      <PageHeader title="办学成果" subtitle={title} bgImage={post.image} />
 
-      {/* 文章内容 */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             
-            {/* 返回按钮 */}
-            <Link 
-              href="/news" 
-              prefetch={false}
-              className="inline-flex items-center text-zk-blue hover:text-zk-red mb-8"
-            >
+            <Link href="/achievements" prefetch={false} className="inline-flex items-center text-zk-blue hover:text-zk-red mb-8">
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              返回新闻列表
+              返回成果列表
             </Link>
             
-            {/* 文章标题 */}
-            <h1 className="text-3xl md:text-4xl font-bold font-serif-sc text-gray-900 mb-6">
-              {title}
-            </h1>
+            <h1 className="text-3xl md:text-4xl font-bold font-serif-sc text-gray-900 mb-6">{title}</h1>
             
-            {/* 元信息 */}
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-8 pb-8 border-b border-gray-200">
               {post.category && (
-                <span className="bg-zk-red text-white px-3 py-1 rounded-full text-xs font-bold">
+                <span className="bg-zk-gold text-white px-3 py-1 rounded-full text-xs font-bold">
                   {post.category}
                 </span>
               )}
@@ -158,14 +98,6 @@ export default async function NewsDetailPage({
                 </svg>
                 {post.date}
               </span>
-              {post.author && (
-                <span className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  {post.author}
-                </span>
-              )}
               
               {/* 来源标识 */}
               <span className={`px-2 py-1 rounded text-xs ${
@@ -177,14 +109,8 @@ export default async function NewsDetailPage({
               </span>
             </div>
             
-            {/* 封面图 */}
             <div className="mb-8 rounded-lg overflow-hidden">
-              <img 
-                src={post.image} 
-                alt={title} 
-                className="w-full h-auto"
-                loading="eager"
-              />
+              <img src={post.image} alt={title} className="w-full h-auto" loading="eager" />
             </div>
             
             {/* 文章正文 */}

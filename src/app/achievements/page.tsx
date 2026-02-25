@@ -3,17 +3,16 @@
  * 办学成果页面 - 惠州仲恺中学官网
  * ============================================================================
  * 
- * 【新手指南】
- * 这是办学成果页面，展示学校荣誉和学生成绩。
- * 
- * 【如何修改内容】
- * 修改 src/lib/data.ts 中的 HONORS_DATA 和 NEWS_DATA 即可更新内容
+ * 【改造说明】
+ * 1. 改为 async 函数，支持动态渲染
+ * 2. 使用 getCombinedPosts 获取混合数据（本地 + Hexo 远程）
+ * 3. 支持远程文章的完整展示
  */
 
 import { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/school";
-import { HONORS_DATA, NEWS_DATA, PAGE_CONFIGS } from "@/lib/data";
+import { HONORS_DATA, PAGE_CONFIGS, getCombinedPosts } from "@/lib/data";
 
 // ============================================================================
 // 页面元数据（SEO）
@@ -25,9 +24,12 @@ export const metadata: Metadata = {
 };
 
 // ============================================================================
-// 办学成果页面组件
+// 办学成果页面组件（改为 async 动态渲染）
 // ============================================================================
-export default function AchievementsPage() {
+export default async function AchievementsPage() {
+  // 获取合并后的文章数据（本地 + Hexo 远程）
+  const posts = await getCombinedPosts('achievements');
+  
   return (
     <div>
       
@@ -70,7 +72,7 @@ export default function AchievementsPage() {
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {NEWS_DATA.filter(news => news.category === '荣誉时刻').map((news) => (
+            {posts.map((news) => (
               <div 
                 key={news.id} 
                 className="bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full"
@@ -84,8 +86,15 @@ export default function AchievementsPage() {
                   />
                   
                   <span className="absolute top-4 left-4 bg-zk-gold text-white text-xs font-bold px-3 py-1 rounded-full">
-                    荣誉时刻
+                    {news.category || '荣誉时刻'}
                   </span>
+                  
+                  {/* 远程文章标识 */}
+                  {news._source === 'remote' && (
+                    <span className="absolute top-4 right-4 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded">
+                      博客
+                    </span>
+                  )}
                 </div>
                 
                 {/* 信息 */}
@@ -115,6 +124,16 @@ export default function AchievementsPage() {
               </div>
             ))}
           </div>
+          
+          {/* 空状态提示 */}
+          {posts.length === 0 && (
+            <div className="text-center py-16 text-gray-500">
+              <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+              </svg>
+              <p>暂无成果展示</p>
+            </div>
+          )}
         </div>
       </section>
 

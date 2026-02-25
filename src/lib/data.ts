@@ -322,6 +322,8 @@ export async function getCombinedPosts(moduleName: string): Promise<CombinedPost
       ...item,
       _source: 'local',
       _slug: null,
+      _path: null,
+      _permalink: null,
     });
   });
   
@@ -368,40 +370,50 @@ function getLocalData(moduleName: string): any[] {
 
 /**
  * 将 Hexo 文章转换为统一格式
- * 【修复】正确处理 categories 和 tags 字段
+ * 【关键修复】
+ * 1. 必须使用 abbrlink 作为唯一 ID
+ * 2. 提取完整的 raw 源码用于详情页完整渲染
+ * 3. 直接保存 Hexo 的 path 和 permalink，解决跳转 404
  */
 function convertHexoPostToCombined(post: HexoPost, postId: string): CombinedPost {
   const dateStr = post.date ? post.date.split(' ')[0] : new Date().toISOString().split('T')[0];
   
-  // 【修复】使用辅助函数提取分类名称
+  // 提取分类名称
   let category = '';
   const catNames = extractCategoryNames(post.categories);
   if (catNames.length > 0) {
     category = catNames[0];
   }
   
-  // 【修复】确保 tags 是字符串数组
+  // 提取标签
   let tags: string[] = [];
   if (post.tags && Array.isArray(post.tags)) {
     tags = post.tags.map(tag => {
       if (typeof tag === 'string') return tag;
       if (typeof tag === 'object' && tag && 'name' in tag) return (tag as { name: string }).name;
-      return '';
+      return String(tag);
     }).filter(Boolean);
   }
   
+  // 【关键修复1】必须使用 abbrlink 作为唯一 ID
+  const finalId = post.abbrlink || postId;
+  
   return {
-    id: postId,
+    id: finalId,
     title: post.title || '无标题',
     date: dateStr,
     category: category,
     summary: post.excerpt || post.description || '',
     image: post.cover || 'https://picsum.photos/600/400?random=' + Math.random(),
-    content: post.text || '',
-    author: post.author || '',
+    // 【关键修复2】提取完整的 raw 源码，用于详情页完整渲染
+    content: post.raw || post.text || '',
+    author: post.author || '惠州仲恺中学',
     tags: tags,
     _source: 'remote',
-    _slug: post.slug || postId,
+    _slug: finalId,
+    // 【关键修复3】直接保存 Hexo 的 path 和 permalink，解决跳转 404
+    _path: post.path || null,
+    _permalink: post.permalink || null,
   };
 }
 

@@ -297,6 +297,8 @@ export interface HexoPost {
   excerpt?: string;
   description?: string;
   text?: string;
+  /** 【新增】完整的 Markdown 源码（包含 Frontmatter 和正文） */
+  raw?: string;
   categories?: (string | HexoCategory)[];
   tags?: string[];
   author?: string;
@@ -342,6 +344,10 @@ export interface CombinedPost {
   // 内部字段
   _source: 'local' | 'remote';
   _slug: string | null;
+  /** 【新增】Hexo 文章的相对路径，用于精准跳转 */
+  _path: string | null;
+  /** 【新增】Hexo 文章的永久链接，用于精准跳转 */
+  _permalink: string | null;
 }
 
 /**
