@@ -24,6 +24,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { SCHOOL_INFO } from '@/lib/data';
+import Image from "next/image";
 
 /**
  * Footer 组件
@@ -47,32 +48,35 @@ export default function Footer() {
   return (
     <footer className="bg-slate-900 text-gray-300 pt-16 pb-8">
       <div className="container mx-auto px-4 md:px-6">
-        
+
         {/* ==================================================================
             主要内容区域 - 四列布局
             ================================================================== */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          
+
           {/* ----------------------------------------------------------------
               第一列：学校信息
               ---------------------------------------------------------------- */}
           <div className="space-y-4">
             {/* Logo 和名称 */}
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white font-bold">
-                ZK
-              </div>
+              <Image
+                src="/logo.png"
+                alt="仲恺中学"
+                width={40}
+                height={40}
+              />
               <h3 className="text-xl font-bold text-white font-serif-sc">
                 {SCHOOL_INFO.name}
               </h3>
             </div>
-            
+
             {/* 校训 */}
             <p className="text-sm leading-relaxed text-gray-400">
-              {SCHOOL_INFO.motto || '尚德 博学 健体 力行'}<br/>
+              {SCHOOL_INFO.motto || '尚德 博学 健体 力行'}<br />
               传承红色基因，培育时代新人。
             </p>
-            
+
             {/* 学校等级标签 */}
             <div className="pt-4">
               <span className="inline-block px-3 py-1 text-xs font-semibold bg-zk-blue text-white rounded-full">
@@ -88,7 +92,7 @@ export default function Footer() {
             <h4 className="text-lg font-bold text-white mb-6 border-b border-gray-700 pb-2 inline-block">
               联系方式
             </h4>
-            
+
             <ul className="space-y-3 text-sm">
               {/* 地址 */}
               <li className="flex items-start">
@@ -98,7 +102,7 @@ export default function Footer() {
                 </svg>
                 <span>{SCHOOL_INFO.address}</span>
               </li>
-              
+
               {/* 电话 */}
               <li className="flex items-center">
                 <svg className="w-5 h-5 mr-3 text-zk-gold shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,7 +110,7 @@ export default function Footer() {
                 </svg>
                 <span>{SCHOOL_INFO.phone}</span>
               </li>
-              
+
               {/* 邮箱 */}
               <li className="flex items-center">
                 <svg className="w-5 h-5 mr-3 text-zk-gold shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,12 +128,12 @@ export default function Footer() {
             <h4 className="text-lg font-bold text-white mb-6 border-b border-gray-700 pb-2 inline-block">
               快速链接
             </h4>
-            
+
             <ul className="space-y-2 text-sm">
               {quickLinks.map((link) => (
                 <li key={link.path}>
-                  <Link 
-                    href={link.path} 
+                  <Link
+                    href={link.path}
                     className="hover:text-zk-gold transition-colors"
                   >
                     {link.label}
@@ -146,7 +150,7 @@ export default function Footer() {
             <h4 className="text-lg font-bold text-white mb-6 border-b border-gray-700 pb-2 inline-block">
               运营团队
             </h4>
-            
+
             <div className="bg-white/5 p-4 rounded-lg border border-white/10">
               <p className="text-sm mb-3">
                 本网站由<span className="text-zk-gold font-bold"> {SCHOOL_INFO.studentOrgName} </span>自主设计与维护。

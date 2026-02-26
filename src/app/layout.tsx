@@ -34,39 +34,45 @@ export const metadata: Metadata = {
   keywords: PAGE_CONFIGS.home.keywords,
   authors: [{ name: SCHOOL_INFO.studentOrgName }],
   icons: {
-    icon: "/favicon.ico",
-  },
-  openGraph: {
-    title: PAGE_CONFIGS.home.title,
-    description: PAGE_CONFIGS.home.description,
-    url: SITE_CONFIG.url,
-    siteName: SCHOOL_INFO.name,
-    locale: "zh_CN",
-    type: "website",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.png', type: 'image/png', sizes: '96x96' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180' },
+    ],
+    },
+    openGraph: {
+      title: PAGE_CONFIGS.home.title,
+      description: PAGE_CONFIGS.home.description,
+      url: SITE_CONFIG.url,
+      siteName: SCHOOL_INFO.name,
+      locale: "zh_CN",
+      type: "website",
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="zh-CN" suppressHydrationWarning>
-      <body className={`${notoSansSC.variable} ${notoSerifSC.variable} font-sans antialiased`}>
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-grow pt-20">
-            {children}
-          </main>
-          <Footer />
-        </div>
-        <Analytics />
-      </body>
-    </html>
-  );
+  export default function RootLayout({
+    children,
+  }: Readonly<{
+    children: React.ReactNode;
+  }>) {
+    return (
+      <html lang="zh-CN" suppressHydrationWarning>
+        <body className={`${notoSansSC.variable} ${notoSerifSC.variable} font-sans antialiased`}>
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow pt-20">
+              {children}
+            </main>
+            <Footer />
+          </div>
+          <Analytics />
+        </body>
+      </html>
+    );
 }
