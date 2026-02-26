@@ -3,17 +3,16 @@
  * 师资力量页面 - 惠州仲恺中学官网
  * ============================================================================
  * 
- * 【新手指南】
- * 这是师资力量列表页面，展示所有教师。
- * 
- * 【如何修改内容】
- * 修改 src/lib/data.ts 中的 TEACHERS_DATA 即可更新教师列表
+ * 【改造说明】
+ * 1. 改为 async 函数，支持动态渲染
+ * 2. 使用 getCombinedPosts 获取混合数据（本地 + Hexo 远程）
+ * 3. 支持远程文章的完整展示
  */
 
 import { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/school";
-import { TEACHERS_DATA, PAGE_CONFIGS } from "@/lib/data";
+import { TEACHERS_DATA, PAGE_CONFIGS, getCombinedPosts } from "@/lib/data";
 
 // ============================================================================
 // 页面元数据（SEO）
@@ -25,72 +24,82 @@ export const metadata: Metadata = {
 };
 
 // ============================================================================
-// 师资力量页面组件
+// 师资力量页面组件（改为 async 动态渲染）
 // ============================================================================
-export default function TeachersPage() {
+export default async function TeachersPage() {
+  // 获取合并后的文章数据（本地 + Hexo 远程）
+  const posts = await getCombinedPosts('teachers');
+  
   return (
     <div>
-      
-      {/* 页面横幅 */}
       <PageHeader 
         title="师资力量" 
         subtitle="德艺双馨，潜心育人"
         bgImage={`https://picsum.photos/1920/600?random=teachers`}
       />
 
-      {/* 教师列表 */}
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
-          
-          {/*
-            教师卡片网格布局
-            - 响应式设计：手机1列，平板2列，桌面3列
-            - 每个卡片包含：头像、姓名、职称、学科、简介
-          */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {TEACHERS_DATA.map((teacher) => (
-              <div 
-                key={teacher.id} 
-                className="bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full"
-              >
-                {/* 教师头像 */}
-                <div className="relative group">
-                  <img 
-                    src={teacher.image} 
-                    alt={teacher.name} 
-                    className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500" 
-                  />
-                  
-                  {/* 职称标签 */}
-                  <span className="absolute bottom-4 left-4 bg-zk-red text-white text-xs font-bold px-3 py-1 rounded-full">
-                    {teacher.title}
-                  </span>
-                </div>
-                
-                {/* 教师信息 */}
-                <div className="p-6 flex flex-col flex-grow">
-                  {/* 姓名和学科 */}
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-xl font-bold text-gray-900">{teacher.name}</h3>
-                    <span className="text-sm text-zk-blue font-medium">{teacher.subject}</span>
+            {posts.map((item) => {
+              // 兼容本地教师数据和远程文章数据
+              const isLocalTeacher = 'name' in item && item.name;
+              const displayName = isLocalTeacher ? item.name : item.title;
+              const displayTitle = isLocalTeacher ? item.title : (item.category || '教师风采');
+              const displaySubject = isLocalTeacher ? item.subject : '';
+              const displayDesc = isLocalTeacher ? item.description : item.summary;
+              
+              return (
+                <div 
+                  key={item.id} 
+                  className="bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full"
+                >
+                  <div className="relative group">
+                    <img 
+                      src={item.image} 
+                      alt={displayName} 
+                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500" 
+                    />
+                    <span className="absolute bottom-4 left-4 bg-zk-red text-white text-xs font-bold px-3 py-1 rounded-full">
+                      {displayTitle}
+                    </span>
+                    
+                    {/* 远程文章标识 */}
+                    {item._source === 'remote' && (
+                      <span className="absolute top-4 right-4 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded">
+                        博客
+                      </span>
+                    )}
                   </div>
-                  
-                  {/* 简介 */}
-                  <p className="text-gray-600 text-sm mb-4 flex-grow">
-                    {teacher.description}
-                  </p>
-                  
-                  {/* 了解更多按钮 */}
-                  <Link 
-                    href={`/teachers/${teacher.id}`} 
-                    className="inline-block text-center w-full py-2 border border-gray-200 rounded text-sm font-bold text-gray-600 hover:bg-zk-red hover:text-white hover:border-zk-red transition-colors mt-auto"
-                  >
-                    了解更多
-                  </Link>
+                  <div className="p-6 flex flex-col flex-grow">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="text-xl font-bold text-gray-900">{displayName}</h3>
+                      {displaySubject && (
+                        <span className="text-sm text-zk-blue font-medium">{displaySubject}</span>
+                      )}
+                    </div>
+                    <p className="text-gray-600 text-sm mb-4 flex-grow">{displayDesc}</p>
+                    <Link 
+                      href={`/teachers/${item.id}`} 
+                      className="inline-block text-center w-full py-2 border border-gray-200 rounded text-sm font-bold text-gray-600 hover:bg-zk-red hover:text-white hover:border-zk-red transition-colors mt-auto"
+                    >
+                      了解更多
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+          
+          {/* 空状态提示 */}
+          {posts.length === 0 && (
+            <div className="text-center py-16 text-gray-500">
+              <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <p>暂无教师信息</p>
+            </div>
+          )}
         </div>
       </section>
     </div>

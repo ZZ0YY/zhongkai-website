@@ -63,13 +63,14 @@ const CATEGORY_MAP: Record<string, string> = {
 
 /**
  * 反向映射：模块名 -> Hexo 分类名
+ * 【说明】可以在这里添加更多分类名，用逗号分隔
  */
 const MODULE_TO_CATEGORY: Record<string, string[]> = {
-  'news': ['新闻动态', '校园新闻', '通知公告', '教务动态'],
-  'courses': ['课程教学'],
-  'teachers': ['师资力量'],
-  'events': ['校园活动'],
-  'achievements': ['办学成果', '荣誉时刻'],
+  'news': ['新闻动态', '校园新闻', '通知公告', '教务动态', '学校新闻', '新闻'],
+  'courses': ['课程教学', '课程', '教学'],
+  'teachers': ['师资力量', '教师风采', '教师', '名师风采', '优秀教师'],
+  'events': ['校园活动', '活动', '校园生活', '学生活动'],
+  'achievements': ['办学成果', '荣誉时刻', '成果', '荣誉', '获奖'],
 };
 
 // ============================================================================
@@ -80,7 +81,7 @@ export const SCHOOL_INFO: SchoolInfo = {
   fullName: "惠州市仲恺中学",
   address: "广东省惠州市仲恺高新区陈江街道",
   phone: "0752-3323215",
-  email: "zkzx@huizhou.gov.cn",
+  email: "zyj2111479855@gmail.com",
   founded: 1969,
   level: "广东省一级学校",
   description: "惠州仲恺中学（原陈江中学）创办于1969年，1994年更名为仲恺中学，以纪念廖仲恺先生。学校是广东省一级学校、广东省绿色学校、惠州市一级学校。",

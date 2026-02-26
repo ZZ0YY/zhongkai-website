@@ -24,8 +24,6 @@ export default function SoftwarePage() {
 
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
-          
-          {/* 分类筛选提示 */}
           <div className="mb-8 text-center">
             <p className="text-gray-500">
               为师生精选优质教学软件和学习资源，全部免费使用
@@ -60,33 +58,22 @@ export default function SoftwarePage() {
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-grow">
                     {software.description}
                   </p>
-                  
-                  {/* 平台标签 */}
                   <div className="flex flex-wrap gap-1 mb-4">
                     {software.platform.map((platform, index) => (
-                      <span 
-                        key={index}
-                        className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
-                      >
+                      <span key={index} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
                         {platform}
                       </span>
                     ))}
                   </div>
-                  
-                  {/* 标签 */}
                   {software.tags && (
                     <div className="flex flex-wrap gap-2 mb-4">
                       {software.tags.map((tag, index) => (
-                        <span 
-                          key={index}
-                          className="text-xs bg-red-50 text-zk-red px-2 py-1 rounded"
-                        >
+                        <span key={index} className="text-xs bg-red-50 text-zk-red px-2 py-1 rounded">
                           {tag}
                         </span>
                       ))}
                     </div>
                   )}
-                  
                   <Link 
                     href={`/software/${software.id}`} 
                     prefetch={false}
@@ -101,7 +88,6 @@ export default function SoftwarePage() {
         </div>
       </section>
 
-      {/* 使用说明 */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
