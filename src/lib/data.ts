@@ -325,6 +325,7 @@ export async function getCombinedPosts(moduleName: string): Promise<CombinedPost
       _slug: null,
       _path: null,
       _permalink: null,
+      _module: moduleName,
     });
   });
   
@@ -339,7 +340,9 @@ export async function getCombinedPosts(moduleName: string): Promise<CombinedPost
     );
     
     if (existingIndex === -1) {
-      combinedPosts.push(convertHexoPostToCombined(post, postId.toString()));
+      const convertedPost = convertHexoPostToCombined(post, postId.toString());
+      convertedPost._module = moduleName;
+      combinedPosts.push(convertedPost);
     }
   });
   
@@ -435,17 +438,27 @@ export async function getPostIds(moduleName: string): Promise<string[]> {
 }
 
 /**
- * 获取最新文章
+ * 获取最新文章（去重，保留模块信息用于生成正确的链接）
  */
 export async function getLatestPosts(limit: number = 6): Promise<CombinedPost[]> {
-  const allPosts: CombinedPost[] = [];
+  // 使用 Map 去重，key 为文章 ID
+  const postsMap = new Map<string, CombinedPost>();
   
-  const modules = ['news', 'events', 'achievements'];
+  const modules = ['news', 'events', 'achievements', 'teachers', 'courses'];
   
   for (const moduleName of modules) {
     const posts = await getCombinedPosts(moduleName);
-    allPosts.push(...posts);
+    for (const post of posts) {
+      const postId = post.id.toString();
+      // 如果文章已存在，跳过（避免重复）
+      if (!postsMap.has(postId)) {
+        postsMap.set(postId, post);
+      }
+    }
   }
+  
+  // 转换为数组并按日期排序
+  const allPosts = Array.from(postsMap.values());
   
   allPosts.sort((a, b) => {
     const dateA = new Date(a.date || '1970-01-01').getTime();

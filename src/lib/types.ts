@@ -348,6 +348,8 @@ export interface CombinedPost {
   _path: string | null;
   /** 【新增】Hexo 文章的永久链接，用于精准跳转 */
   _permalink: string | null;
+  /** 【新增】文章所属模块，用于生成正确的详情页链接 */
+  _module?: string;
 }
 
 /**

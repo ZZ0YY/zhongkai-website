@@ -166,41 +166,43 @@ export default async function HomePage() {
           
           {/* 最新文章卡片 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {latestPosts.map((post) => (
-              <div 
-                key={post.id} 
-                className="group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300"
-              >
-                {/* 文章图片 */}
-                <div className="h-48 overflow-hidden">
-                  <img 
-                    src={post.image} 
-                    alt={post.title} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                  />
-                </div>
-                
-                {/* 文章信息 */}
-                <div className="p-6">
-                  <div className="flex items-center gap-2 mb-3 text-xs text-gray-500">
-                    <span className="text-zk-red font-bold">{post.category}</span>
-                    <span>•</span>
-                    <span>{post.date}</span>
-                    {post._source === 'remote' && (
-                      <span className="bg-blue-100 text-zk-blue px-2 py-0.5 rounded">博客</span>
-                    )}
+            {latestPosts.map((post) => {
+              // 根据文章所属模块生成正确的链接
+              const modulePath = post._module || 'news';
+              const postLink = `/${modulePath}/${post.id}`;
+              
+              return (
+                <div 
+                  key={post.id} 
+                  className="group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300"
+                >
+                  {/* 文章图片 */}
+                  <div className="h-48 overflow-hidden">
+                    <img 
+                      src={post.image} 
+                      alt={post.title} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                    />
                   </div>
-                  <h3 className="text-lg font-bold mb-2 group-hover:text-zk-red transition-colors line-clamp-2">
-                    {post._source === 'remote' ? (
-                      <Link href={`/news/${post.id}`} target="_blank">{post.title}</Link>
-                    ) : (
-                      <Link href={`/news/${post.id}`}>{post.title}</Link>
-                    )}
-                  </h3>
-                  <p className="text-gray-600 text-sm line-clamp-2">{post.summary}</p>
+                  
+                  {/* 文章信息 */}
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 mb-3 text-xs text-gray-500">
+                      <span className="text-zk-red font-bold">{post.category}</span>
+                      <span>•</span>
+                      <span>{post.date}</span>
+                      {post._source === 'remote' && (
+                        <span className="bg-blue-100 text-zk-blue px-2 py-0.5 rounded">博客</span>
+                      )}
+                    </div>
+                    <h3 className="text-lg font-bold mb-2 group-hover:text-zk-red transition-colors line-clamp-2">
+                      <Link href={postLink}>{post.title}</Link>
+                    </h3>
+                    <p className="text-gray-600 text-sm line-clamp-2">{post.summary}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           
           {/* 博客入口按钮 */}
