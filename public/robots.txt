@@ -58,4 +58,4 @@ Allow: /
 # Disallow: /private/
 
 # 网站地图位置
-Sitemap: https://zkzxgzb.com/sitemap.xml
+Sitemap: https://www.zkzxgzb.com/sitemap.xml
