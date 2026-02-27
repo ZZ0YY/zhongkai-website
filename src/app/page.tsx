@@ -65,7 +65,7 @@ export default async function HomePage() {
           <div className="max-w-3xl">
             {/* 建校年份标签 */}
             <span className="inline-block px-4 py-1 mb-6 border border-zk-gold text-zk-gold rounded-full text-sm font-bold tracking-wider uppercase animate-fade-in">
-              EST. 1969
+              EST. 1964
             </span>
             
             {/* 主标题 */}

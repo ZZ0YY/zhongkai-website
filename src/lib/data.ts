@@ -82,11 +82,13 @@ export const SCHOOL_INFO: SchoolInfo = {
   address: "广东省惠州市仲恺高新区陈江街道",
   phone: "0752-3323215",
   email: "zyj2111479855@gmail.com",
-  founded: 1969,
+  founded: 1964, // 前身为陈江农业中学，1964年创办
   level: "广东省一级学校",
-  description: "惠州仲恺中学（原陈江中学）创办于1969年，1994年更名为仲恺中学，以纪念廖仲恺先生。学校是广东省一级学校、广东省绿色学校、惠州市一级学校。",
+  description: "仲恺中学是以中国民主革命先驱、伟大的爱国主义者廖仲恺先生的名字命名的名人纪念性完全中学，是惠州仲恺高新区唯一的一所区直属中学，广东省一级学校。",
   studentOrgName: "仲恺中学融媒体中心 & 信息社",
-  motto: "尚德 博学 健体 力行",
+  motto: "人生最重是精神，精神日新德日新",
+  philosophy: "师名人风范，育一代英才", // 办学理念
+  strategy: "三品三促", // 办学思路
 };
 
 // ============================================================================
@@ -110,18 +112,18 @@ export const NAV_ITEMS: NavItem[] = [
 export const HERO_SLIDES = [
   {
     image: "https://picsum.photos/1920/1080?random=1",
-    title: "尚德 博学 健体 力行",
+    title: "人生最重是精神，精神日新德日新",
     subtitle: "传承仲恺精神，培育时代新人"
   },
   {
     image: "https://picsum.photos/1920/1080?random=2",
     title: "广东省一级学校",
-    subtitle: "五十余载薪火相传，桃李满天下"
+    subtitle: "名人纪念性完全中学，办学规模居惠州市前列"
   },
   {
     image: "https://picsum.photos/1920/1080?random=3",
-    title: "丰富多彩的校园生活",
-    subtitle: "学生社团自主运营，展现青春风采"
+    title: "师名人风范，育一代英才",
+    subtitle: "三品三促办学思路，促学生成才教师成长学校成功"
   }
 ];
 
@@ -484,7 +486,7 @@ export const SITE_CONFIG = {
 
 export const PAGE_CONFIGS: Record<string, { title: string; description: string; keywords: string[] }> = {
   home: { title: "惠州仲恺中学 - 广东省一级学校", description: "惠州仲恺中学官网，广东省一级学校，坐落于仲恺高新区。", keywords: ["惠州仲恺中学", "仲恺中学", "广东省一级学校"] },
-  about: { title: "学校概况 - 惠州仲恺中学", description: "惠州仲恺中学创办于1969年，1994年更名为仲恺中学。", keywords: ["学校概况", "仲恺中学历史", "办学理念"] },
+  about: { title: "学校概况 - 惠州仲恺中学", description: "仲恺中学是以中国民主革命先驱廖仲恺先生名字命名的名人纪念性完全中学，创办于1964年，广东省一级学校。", keywords: ["学校概况", "仲恺中学历史", "办学理念", "廖仲恺"] },
   news: { title: "新闻动态 - 惠州仲恺中学", description: "惠州仲恺中学新闻动态，关注校园实时资讯。", keywords: ["校园新闻", "仲恺中学新闻", "学校动态"] },
   contact: { title: "联系我们 - 惠州仲恺中学", description: "惠州仲恺中学联系方式。", keywords: ["联系我们", "仲恺中学地址", "招生咨询"] },
   teachers: { title: "师资力量 - 惠州仲恺中学", description: "惠州仲恺中学师资力量介绍。", keywords: ["师资力量", "仲恺中学教师", "优秀教师"] },
@@ -494,3 +496,110 @@ export const PAGE_CONFIGS: Record<string, { title: string; description: string; 
   software: { title: "教学软件 - 惠州仲恺中学", description: "惠州仲恺中学教学软件分享。", keywords: ["教学软件", "教育工具", "学习资源"] },
   blog: { title: "校园博客 - 惠州仲恺中学", description: "惠州仲恺中学校园博客，分享校园故事。", keywords: ["校园博客", "仲恺中学博客", "学生作品"] },
 };
+
+// ============================================================================
+// 校园景观数据（德沁园）
+// ============================================================================
+export interface CampusSpot {
+  name: string;
+  description: string;
+  meaning: string;
+}
+
+export const CAMPUS_LANDSCAPE_DATA: CampusSpot[] = [
+  {
+    name: "凝香池",
+    description: "池中种植荷花，岸边垂柳依依，环境清幽雅致。",
+    meaning: "既有聚集美好、累计知识、香远益清之意，又得之于何香凝女士的名讳，表达仲恺师生对先辈的怀念。"
+  },
+  {
+    name: "东征文化墙",
+    description: "墙上镌刻东征路线图、历史介绍及廖仲恺先生前线演讲、装填炮弹的浮雕。",
+    meaning: "展现廖仲恺先生不顾个人安危与战士并肩作战的革命精神，传承红色记忆。"
+  },
+  {
+    name: "铮铮铁骨",
+    description: "浮雕展现廖仲恺先生被陈炯明关押在广州石井兵工厂囚室中仍坚贞不屈的情景。",
+    meaning: "彰显廖仲恺先生坚贞不屈的革命气节，激励学子在逆境中坚守信念。"
+  },
+  {
+    name: "宏愿树",
+    description: "一棵价值数万元的大榕树，枝繁叶茂，遮天蔽日。",
+    meaning: "寄望仲恺学子勤奋学习，前途远大，亦是仲恺师生的愿望树。"
+  },
+  {
+    name: "凭吊台",
+    description: "周围松柏环绕，庄严肃穆，上书'仰止'二字。",
+    meaning: "取高山仰止之意，是人们缅怀仲恺先生、自省其身之处。"
+  }
+];
+
+// ============================================================================
+// 数据魔方（学校关键数据）
+// ============================================================================
+export interface SchoolStat {
+  value: string;
+  unit?: string;
+  label: string;
+  description?: string;
+}
+
+export const SCHOOL_STATS_DATA: SchoolStat[] = [
+  {
+    value: "94188",
+    unit: "㎡",
+    label: "校园面积",
+    description: "花园式校园，环境优美"
+  },
+  {
+    value: "322",
+    unit: "名",
+    label: "教职工",
+    description: "高素质教师队伍"
+  },
+  {
+    value: "67.1",
+    unit: "%",
+    label: "中高级教师占比",
+    description: "专业教学力量"
+  },
+  {
+    value: "79",
+    unit: "个",
+    label: "教学班级",
+    description: "高中43班，初中36班"
+  },
+  {
+    value: "5388",
+    unit: "人",
+    label: "在校学生",
+    description: "高中学子2694人"
+  },
+  {
+    value: "2800",
+    unit: "+",
+    label: "住校生",
+    description: "完善住宿设施"
+  }
+];
+
+// ============================================================================
+// 交通指南（主要公交线路）
+// ============================================================================
+export interface BusRoute {
+  lineNumber: string;
+  startStation: string;
+  endStation: string;
+  operatingHours: string;
+}
+
+export const BUS_ROUTES_DATA: BusRoute[] = [
+  { lineNumber: "5路", startStation: "工程职业学院", endStation: "中心医院仲恺院区", operatingHours: "06:30-21:45" },
+  { lineNumber: "6路", startStation: "惠州火车站", endStation: "中心医院仲恺院区", operatingHours: "06:30-21:45" },
+  { lineNumber: "11路", startStation: "惠州火车站", endStation: "仲恺高铁站", operatingHours: "06:30-20:30" },
+  { lineNumber: "201路", startStation: "汤泉", endStation: "沥林北城轨站", operatingHours: "05:40-20:40" },
+  { lineNumber: "203路", startStation: "榄塘村总站", endStation: "潼侨工业区", operatingHours: "05:40-20:40" },
+  { lineNumber: "205路", startStation: "东江湾商业中心", endStation: "沥林汽车站", operatingHours: "05:50-20:30" },
+  { lineNumber: "209路快线", startStation: "惠州北高铁站", endStation: "仲恺汽车站", operatingHours: "06:30-21:00" },
+  { lineNumber: "K8路", startStation: "惠州汽车总站", endStation: "惠阳高铁站", operatingHours: "06:00-18:30" }
+];

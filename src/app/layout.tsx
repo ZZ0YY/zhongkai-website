@@ -41,38 +41,38 @@ export const metadata: Metadata = {
     apple: [
       { url: '/apple-touch-icon.png', sizes: '180x180' },
     ],
-    },
-    openGraph: {
-      title: PAGE_CONFIGS.home.title,
-      description: PAGE_CONFIGS.home.description,
-      url: SITE_CONFIG.url,
-      siteName: SCHOOL_INFO.name,
-      locale: "zh_CN",
-      type: "website",
-    },
-    robots: {
-      index: true,
-      follow: true,
-    },
-  };
+  },
+  openGraph: {
+    title: PAGE_CONFIGS.home.title,
+    description: PAGE_CONFIGS.home.description,
+    url: SITE_CONFIG.url,
+    siteName: SCHOOL_INFO.name,
+    locale: "zh_CN",
+    type: "website",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
-  export default function RootLayout({
-    children,
-  }: Readonly<{
-    children: React.ReactNode;
-  }>) {
-    return (
-      <html lang="zh-CN" suppressHydrationWarning>
-        <body className={`${notoSansSC.variable} ${notoSerifSC.variable} font-sans antialiased`}>
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow pt-20">
-              {children}
-            </main>
-            <Footer />
-          </div>
-          <Analytics />
-        </body>
-      </html>
-    );
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="zh-CN" suppressHydrationWarning>
+      <body className={`${notoSansSC.variable} ${notoSerifSC.variable} font-sans antialiased`}>
+        <div className="flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-grow pt-20">
+            {children}
+          </main>
+          <Footer />
+        </div>
+        <Analytics />
+      </body>
+    </html>
+  );
 }

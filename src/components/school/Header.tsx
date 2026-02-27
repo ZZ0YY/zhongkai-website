@@ -39,19 +39,19 @@ export default function Header() {
   // ========================================================================
   // 状态管理
   // ========================================================================
-
+  
   /**
    * isOpen - 移动端菜单是否打开
    * 用于控制移动端菜单的显示/隐藏
    */
   const [isOpen, setIsOpen] = useState(false);
-
+  
   /**
    * isScrolled - 页面是否滚动
    * 用于改变导航栏的样式（滚动后添加阴影）
    */
   const [isScrolled, setIsScrolled] = useState(false);
-
+  
   /**
    * pathname - 当前页面路径
    * 用于判断当前激活的菜单项
@@ -69,10 +69,10 @@ export default function Header() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-
+    
     // 添加滚动事件监听
     window.addEventListener('scroll', handleScroll);
-
+    
     // 组件卸载时移除监听（防止内存泄漏）
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -93,15 +93,16 @@ export default function Header() {
   // 渲染
   // ========================================================================
   return (
-    <header
-      className={`fixed w-full z-50 transition-all duration-300 ${isScrolled
-        ? 'bg-white shadow-md py-2'
-        : 'bg-white/95 backdrop-blur-sm py-4'
-        }`}
+    <header 
+      className={`fixed w-full z-50 transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-white shadow-md py-2' 
+          : 'bg-white/95 backdrop-blur-sm py-4'
+      }`}
     >
       <div className="container mx-auto px-4 md:px-6">
         <nav className="flex items-center justify-between">
-
+          
           {/* ==================================================================
               Logo 区域
               ================================================================== */}
@@ -114,7 +115,7 @@ export default function Header() {
               height={48}
               className="w-10 h-10 md:w-12 md:h-12"
             />
-
+            
             {/* 学校名称 */}
             <div className="flex flex-col">
               <span className="text-xl md:text-2xl font-bold font-serif-sc text-zk-red group-hover:text-zk-blue transition-colors">
@@ -133,14 +134,14 @@ export default function Header() {
             {NAV_ITEMS.map((item) => {
               // 判断当前菜单项是否激活
               const isActive = pathname === item.path;
-
+              
               return (
                 <Link
                   key={item.path}
                   href={item.path}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 
-                    ${isActive
-                      ? 'text-zk-red bg-red-50'
+                    ${isActive 
+                      ? 'text-zk-red bg-red-50' 
                       : 'text-gray-700 hover:text-zk-red hover:bg-gray-50'
                     }`}
                 >
@@ -148,10 +149,10 @@ export default function Header() {
                 </Link>
               );
             })}
-
+            
             {/* 师生登录按钮 */}
-            <a
-              href="#login"
+            <a 
+              href="#login" 
               className="ml-4 px-5 py-2 bg-zk-red text-white text-sm font-bold rounded-full shadow-md hover:bg-red-800 transition-transform hover:-translate-y-0.5"
             >
               师生登录
@@ -161,7 +162,7 @@ export default function Header() {
           {/* ==================================================================
               移动端菜单按钮
               ================================================================== */}
-          <button
+          <button 
             className="lg:hidden text-gray-700 hover:text-zk-red focus:outline-none"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle Menu"
@@ -181,23 +182,25 @@ export default function Header() {
         {/* ==================================================================
             移动端菜单下拉
             ================================================================== */}
-        <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-screen opacity-100 mt-4' : 'max-h-0 opacity-0'
-          }`}>
+        <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+          isOpen ? 'max-h-screen opacity-100 mt-4' : 'max-h-0 opacity-0'
+        }`}>
           <div className="flex flex-col space-y-2 bg-gray-50 p-4 rounded-lg shadow-inner">
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.path}
                 href={item.path}
-                className={`block px-4 py-3 rounded-md text-base font-medium transition-colors ${pathname === item.path
-                  ? 'text-zk-red bg-white'
-                  : 'text-gray-700 hover:text-zk-red hover:bg-white'
-                  }`}
+                className={`block px-4 py-3 rounded-md text-base font-medium transition-colors ${
+                  pathname === item.path 
+                    ? 'text-zk-red bg-white' 
+                    : 'text-gray-700 hover:text-zk-red hover:bg-white'
+                }`}
               >
                 {item.label}
               </Link>
             ))}
-            <a
-              href="#login"
+            <a 
+              href="#login" 
               className="block px-4 py-3 text-center rounded-md text-base font-bold bg-zk-red text-white hover:bg-red-800"
             >
               师生登录
