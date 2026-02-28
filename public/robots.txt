@@ -53,8 +53,9 @@ User-agent: *
 Allow: /
 
 # 禁止抓取的路径（如果有）
+Disallow: /news/blog/
 # Disallow: /admin/
-# Disallow: /api/
+Disallow: /api/
 # Disallow: /private/
 
 # 网站地图位置

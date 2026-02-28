@@ -156,7 +156,7 @@ export default function Footer() {
                 本网站由<span className="text-zk-gold font-bold"> {SCHOOL_INFO.studentOrgName} </span>自主设计与维护。
               </p>
               <p className="text-xs text-gray-500">
-                我们致力于用技术服务校园，记录仲恺中学的每一个精彩瞬间。欢迎对编程、设计感兴趣的同学加入我们！
+                时间有限，许多图片没有完成替换，欢迎使用邮箱投稿。权威信息请关注仲恺中学公众号
               </p>
             </div>
           </div>
