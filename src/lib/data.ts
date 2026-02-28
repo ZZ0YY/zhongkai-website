@@ -111,17 +111,17 @@ export const NAV_ITEMS: NavItem[] = [
 // ============================================================================
 export const HERO_SLIDES = [
   {
-    image: "https://picsum.photos/1920/1080?random=1",
+    image: "https://photo1.20080601.xyz/file/wx/1771546315731_img_1771546305899.jpeg",
     title: "人生最重是精神，精神日新德日新",
     subtitle: "传承仲恺精神，培育时代新人"
   },
   {
-    image: "https://picsum.photos/1920/1080?random=2",
+    image: "https://photo1.20080601.xyz/file/wx/1771546315731_img_1771546305899.jpeg",
     title: "广东省一级学校",
     subtitle: "名人纪念性完全中学，办学规模居惠州市前列"
   },
   {
-    image: "https://picsum.photos/1920/1080?random=3",
+    image: "https://photo1.20080601.xyz/file/wx/1771546315731_img_1771546305899.jpeg",
     title: "师名人风范，育一代英才",
     subtitle: "三品三促办学思路，促学生成才教师成长学校成功"
   }
