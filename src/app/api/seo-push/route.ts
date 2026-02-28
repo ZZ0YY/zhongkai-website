@@ -34,14 +34,14 @@ export async function GET(request: Request) {
       `${baseUrl}/contact`,
     ];
 
-    // 根据参数决定推送全量还是最近 20 条
+    // 根据参数决定推送全量还是最近 10 条
     const dynamicUrls = allPosts
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .map(post => `${baseUrl}/${post._module || 'news'}/${post.id}`);
 
     const finalUrls = pushType === 'full' 
       ? [...staticUrls, ...dynamicUrls] 
-      : [...staticUrls, ...dynamicUrls.slice(0, 20)];
+      : [...staticUrls, ...dynamicUrls.slice(0, 10)];
 
     // 去重
     const uniqueUrls = Array.from(new Set(finalUrls));
