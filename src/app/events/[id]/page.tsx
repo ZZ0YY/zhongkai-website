@@ -11,7 +11,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader, MarkdownRenderer } from "@/components/school";
-import { EVENTS_DATA, SCHOOL_INFO, BLOG_URL, getPostById, getCombinedPosts } from "@/lib/data";
+import { EVENTS_DATA, SCHOOL_INFO, SITE_CONFIG, BLOG_URL, getPostById, getCombinedPosts } from "@/lib/data";
 import { getMarkdownContent, parseFrontmatter, markdownToHtml } from "@/lib/markdown";
 
 export async function generateStaticParams() {
@@ -29,9 +29,36 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const title = post?.title || event?.title;
   if (!title) return { title: "活动未找到" };
   
+  // Canonical URL - 指向官网详情页，避免与博客重复内容
+  const canonicalUrl = `${SITE_CONFIG.url}/events/${id}`;
+  
   return {
     title: `${title} - ${SCHOOL_INFO.name}`,
     description: post?.summary || event?.description || `${title} - ${event?.location}`,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: title,
+      description: post?.summary || event?.description || `${title} - ${event?.location}`,
+      type: 'article',
+      url: canonicalUrl,
+      publishedTime: post?.date || event?.date,
+      images: [
+        {
+          url: post?.image || event?.image || '',
+          width: 1200,
+          height: 630,
+          alt: title,
+        }
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: title,
+      description: post?.summary || event?.description || `${title} - ${event?.location}`,
+      images: [post?.image || event?.image || ''],
+    },
   };
 }
 
@@ -84,8 +111,42 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
     ? mdContent.frontmatter.title 
     : event.title;
   
+  // 构建 JSON-LD 结构化数据 - Article (活动)
+  const eventJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": title,
+    "image": [
+      event.image,
+    ],
+    "datePublished": event.date,
+    "dateModified": event.date,
+    "author": {
+      "@type": "Organization",
+      "name": SCHOOL_INFO.name,
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": SCHOOL_INFO.name,
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${SITE_CONFIG.url}/apple-touch-icon.png`,
+      },
+    },
+    "description": event.description || event.summary || title,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `${SITE_CONFIG.url}/events/${id}`,
+    },
+  };
+  
   return (
     <div>
+      {/* JSON-LD 结构化数据 - Article */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd) }}
+      />
       <PageHeader title="校园活动" subtitle={title} bgImage={event.image} />
 
       <section className="py-20 bg-white">

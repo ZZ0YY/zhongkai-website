@@ -6,7 +6,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader, MarkdownRenderer } from "@/components/school";
-import { SOFTWARE_DATA, SCHOOL_INFO } from "@/lib/data";
+import { SOFTWARE_DATA, SCHOOL_INFO, SITE_CONFIG } from "@/lib/data";
 import { getMarkdownContent } from "@/lib/markdown";
 
 export async function generateStaticParams() {
@@ -23,9 +23,35 @@ export async function generateMetadata({
   
   if (!software) return { title: "软件未找到" };
   
+  // Canonical URL
+  const canonicalUrl = `${SITE_CONFIG.url}/software/${id}`;
+  
   return {
     title: `${software.title} - ${SCHOOL_INFO.name}`,
     description: software.description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: software.title,
+      description: software.description,
+      type: 'article',
+      url: canonicalUrl,
+      images: [
+        {
+          url: software.image,
+          width: 1200,
+          height: 630,
+          alt: software.title,
+        }
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: software.title,
+      description: software.description,
+      images: [software.image],
+    },
   };
 }
 
@@ -43,8 +69,47 @@ export default async function SoftwareDetailPage({
     ? mdContent.frontmatter.title 
     : software.title;
   
+  // 构建 JSON-LD 结构化数据 - SoftwareApplication
+  const softwareJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": title,
+    "applicationCategory": software.category,
+    "operatingSystem": software.platform.join(', '),
+    "description": software.description,
+    "image": [
+      software.image,
+    ],
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "CNY",
+    },
+    "author": {
+      "@type": "Organization",
+      "name": SCHOOL_INFO.name,
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": SCHOOL_INFO.name,
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${SITE_CONFIG.url}/apple-touch-icon.png`,
+      },
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `${SITE_CONFIG.url}/software/${id}`,
+    },
+  };
+  
   return (
     <div>
+      {/* JSON-LD 结构化数据 - SoftwareApplication */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
+      />
       <PageHeader title={software.category} subtitle={title} bgImage={software.image} />
 
       <section className="py-20 bg-white">

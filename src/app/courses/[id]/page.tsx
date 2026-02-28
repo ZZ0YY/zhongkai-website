@@ -6,7 +6,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader, MarkdownRenderer } from "@/components/school";
-import { COURSES_DATA, SCHOOL_INFO } from "@/lib/data";
+import { COURSES_DATA, SCHOOL_INFO, SITE_CONFIG } from "@/lib/data";
 import { getMarkdownContent } from "@/lib/markdown";
 
 export async function generateStaticParams() {
@@ -23,9 +23,35 @@ export async function generateMetadata({
   
   if (!course) return { title: "课程未找到" };
   
+  // Canonical URL
+  const canonicalUrl = `${SITE_CONFIG.url}/courses/${id}`;
+  
   return {
     title: `${course.title} - ${SCHOOL_INFO.name}`,
     description: course.description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: course.title,
+      description: course.description,
+      type: 'article',
+      url: canonicalUrl,
+      images: [
+        {
+          url: course.image,
+          width: 1200,
+          height: 630,
+          alt: course.title,
+        }
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: course.title,
+      description: course.description,
+      images: [course.image],
+    },
   };
 }
 
@@ -43,8 +69,40 @@ export default async function CourseDetailPage({
     ? mdContent.frontmatter.title 
     : course.title;
   
+  // 构建 JSON-LD 结构化数据 - Article (课程)
+  const courseJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": title,
+    "image": [
+      course.image,
+    ],
+    "author": {
+      "@type": "Organization",
+      "name": SCHOOL_INFO.name,
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": SCHOOL_INFO.name,
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${SITE_CONFIG.url}/apple-touch-icon.png`,
+      },
+    },
+    "description": course.description,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `${SITE_CONFIG.url}/courses/${id}`,
+    },
+  };
+  
   return (
     <div>
+      {/* JSON-LD 结构化数据 - Article */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(courseJsonLd) }}
+      />
       <PageHeader title={course.type} subtitle={title} bgImage={course.image} />
 
       <section className="py-20 bg-white">

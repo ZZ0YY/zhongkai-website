@@ -11,7 +11,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader, MarkdownRenderer } from "@/components/school";
-import { TEACHERS_DATA, SCHOOL_INFO, BLOG_URL, getPostById, getCombinedPosts } from "@/lib/data";
+import { TEACHERS_DATA, SCHOOL_INFO, SITE_CONFIG, BLOG_URL, getPostById, getCombinedPosts } from "@/lib/data";
 import { getMarkdownContent, parseFrontmatter, markdownToHtml } from "@/lib/markdown";
 
 export async function generateStaticParams() {
@@ -29,9 +29,35 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const title = post?.title || localTeacher?.name;
   if (!title) return { title: "教师未找到" };
   
+  // Canonical URL
+  const canonicalUrl = `${SITE_CONFIG.url}/teachers/${id}`;
+  
   return {
     title: `${title} - ${SCHOOL_INFO.name}`,
     description: post?.summary || localTeacher?.description || '',
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: title,
+      description: post?.summary || localTeacher?.description || '',
+      type: 'profile',
+      url: canonicalUrl,
+      images: [
+        {
+          url: post?.image || localTeacher?.image || '',
+          width: 1200,
+          height: 630,
+          alt: title,
+        }
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: title,
+      description: post?.summary || localTeacher?.description || '',
+      images: [post?.image || localTeacher?.image || ''],
+    },
   };
 }
 
@@ -78,8 +104,31 @@ export default async function TeacherDetailPage({ params }: { params: Promise<{ 
     ? mdContent.frontmatter.title 
     : (localTeacher?.name || post?.title || '教师详情');
   
+  // 构建 JSON-LD 结构化数据 - Person (教师)
+  const teacherJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": title,
+    "image": teacher.image,
+    "jobTitle": localTeacher?.title || '教师',
+    "worksFor": {
+      "@type": "School",
+      "name": SCHOOL_INFO.name,
+    },
+    "description": teacher.description || teacher.summary || '',
+    "mainEntityOfPage": {
+      "@type": "ProfilePage",
+      "@id": `${SITE_CONFIG.url}/teachers/${id}`,
+    },
+  };
+  
   return (
     <div>
+      {/* JSON-LD 结构化数据 - Person */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(teacherJsonLd) }}
+      />
       <PageHeader title="师资力量" subtitle={title} bgImage={teacher.image} />
 
       <section className="py-20 bg-white">

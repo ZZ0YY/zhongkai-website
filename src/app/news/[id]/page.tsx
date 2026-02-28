@@ -13,7 +13,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader, MarkdownRenderer } from "@/components/school";
-import { SCHOOL_INFO, PAGE_CONFIGS, BLOG_URL, getPostById, getCombinedPosts } from "@/lib/data";
+import { SCHOOL_INFO, SITE_CONFIG, PAGE_CONFIGS, BLOG_URL, getPostById, getCombinedPosts } from "@/lib/data";
 import { getMarkdownContent, parseFrontmatter, markdownToHtml } from "@/lib/markdown";
 
 // ============================================================================
@@ -48,16 +48,36 @@ export async function generateMetadata({
     return { title: "新闻未找到" };
   }
   
+  // Canonical URL - 指向官网详情页，避免与博客重复内容
+  const canonicalUrl = `${SITE_CONFIG.url}/news/${id}`;
+  
   return {
     title: `${post.title} - ${SCHOOL_INFO.name}`,
     description: post.summary || post.title,
     keywords: [post.category || '新闻', SCHOOL_INFO.name],
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
       title: post.title,
       description: post.summary || post.title,
       type: 'article',
+      url: canonicalUrl,
       publishedTime: post.date,
       authors: post.author ? [post.author] : [SCHOOL_INFO.name],
+      images: [
+        {
+          url: post.image,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        }
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.summary || post.title,
       images: [post.image],
     },
   };
@@ -114,8 +134,42 @@ export default async function NewsDetailPage({
     ? mdContent.frontmatter.title 
     : post.title;
   
+  // 构建 JSON-LD 结构化数据 - NewsArticle
+  const newsArticleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    "headline": title,
+    "image": [
+      post.image,
+    ],
+    "datePublished": post.date,
+    "dateModified": post.date,
+    "author": {
+      "@type": "Organization",
+      "name": post.author || SCHOOL_INFO.name,
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": SCHOOL_INFO.name,
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${SITE_CONFIG.url}/apple-touch-icon.png`,
+      },
+    },
+    "description": post.summary || title,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `${SITE_CONFIG.url}/news/${id}`,
+    },
+  };
+  
   return (
     <div>
+      {/* JSON-LD 结构化数据 - NewsArticle */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(newsArticleJsonLd) }}
+      />
       {/* 页面横幅 */}
       <PageHeader 
         title={post.category || '新闻动态'} 

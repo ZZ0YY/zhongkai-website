@@ -11,7 +11,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader, MarkdownRenderer } from "@/components/school";
-import { SCHOOL_INFO, BLOG_URL, getPostById, getCombinedPosts } from "@/lib/data";
+import { SCHOOL_INFO, SITE_CONFIG, BLOG_URL, getPostById, getCombinedPosts } from "@/lib/data";
 import { getMarkdownContent, parseFrontmatter, markdownToHtml } from "@/lib/markdown";
 
 export async function generateStaticParams() {
@@ -27,9 +27,36 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   
   if (!post) return { title: "成果未找到" };
   
+  // Canonical URL - 指向官网详情页，避免与博客重复内容
+  const canonicalUrl = `${SITE_CONFIG.url}/achievements/${id}`;
+  
   return {
     title: `${post.title} - ${SCHOOL_INFO.name}`,
     description: post.summary || post.title,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: post.title,
+      description: post.summary || post.title,
+      type: 'article',
+      url: canonicalUrl,
+      publishedTime: post.date,
+      images: [
+        {
+          url: post.image,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        }
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.summary || post.title,
+      images: [post.image],
+    },
   };
 }
 
@@ -69,8 +96,42 @@ export default async function AchievementDetailPage({ params }: { params: Promis
     ? mdContent.frontmatter.title 
     : post.title;
   
+  // 构建 JSON-LD 结构化数据 - Article (办学成果)
+  const achievementJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": title,
+    "image": [
+      post.image,
+    ],
+    "datePublished": post.date,
+    "dateModified": post.date,
+    "author": {
+      "@type": "Organization",
+      "name": post.author || SCHOOL_INFO.name,
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": SCHOOL_INFO.name,
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${SITE_CONFIG.url}/apple-touch-icon.png`,
+      },
+    },
+    "description": post.summary || title,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `${SITE_CONFIG.url}/achievements/${id}`,
+    },
+  };
+  
   return (
     <div>
+      {/* JSON-LD 结构化数据 - Article */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(achievementJsonLd) }}
+      />
       <PageHeader title="办学成果" subtitle={title} bgImage={post.image} />
 
       <section className="py-20 bg-white">
