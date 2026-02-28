@@ -132,7 +132,8 @@ export default async function AchievementDetailPage({ params }: { params: Promis
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(achievementJsonLd) }}
       />
-      <PageHeader title="办学成果" subtitle={title} bgImage={post.image} />
+      {/* 页面横幅 - as="h2" 避免与文章标题 h1 冲突 */}
+      <PageHeader title="办学成果" subtitle={title} bgImage={post.image} as="h2" />
 
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">

@@ -36,6 +36,8 @@ interface PageHeaderProps {
   subtitle?: string;
   /** 背景图片URL（可选） */
   bgImage?: string;
+  /** 标题标签级别（可选，默认 h1）*/
+  as?: 'h1' | 'h2';
 }
 
 /**
@@ -45,8 +47,11 @@ interface PageHeaderProps {
 export default function PageHeader({ 
   title, 
   subtitle, 
-  bgImage = "https://picsum.photos/1920/600?grayscale&blur=2" 
+  bgImage = "https://picsum.photos/1920/600?grayscale&blur=2",
+  as = 'h1'
 }: PageHeaderProps) {
+  // 动态选择标题标签
+  const TitleTag = as;
   return (
     <div className="relative h-64 md:h-80 flex items-center justify-center text-center text-white overflow-hidden bg-gray-900">
       
@@ -69,10 +74,10 @@ export default function PageHeader({
           - 包含标题和副标题
           ================================================================== */}
       <div className="relative z-10 container mx-auto px-4">
-        {/* 页面标题 */}
-        <h1 className="text-4xl md:text-5xl font-bold font-serif-sc mb-4 tracking-wide animate-fade-in-up">
+        {/* 页面标题 - 根据页面类型动态选择 h1 或 h2 */}
+        <TitleTag className="text-4xl md:text-5xl font-bold font-serif-sc mb-4 tracking-wide animate-fade-in-up">
           {title}
-        </h1>
+        </TitleTag>
         
         {/* 页面副标题（如果有） */}
         {subtitle && (

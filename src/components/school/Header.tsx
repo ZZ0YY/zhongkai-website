@@ -30,7 +30,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NAV_ITEMS, SCHOOL_INFO } from '@/lib/data';
-import Image from "next/image";
+
 /**
  * Header 组件
  * 网站顶部导航栏
@@ -107,14 +107,10 @@ export default function Header() {
               Logo 区域
               ================================================================== */}
           <Link href="/" className="flex items-center gap-3 group">
-            {/* Logo 图标 - 使用图片 */}
-            <Image
-              src="/logo.png"
-              alt="仲恺中学"
-              width={48}
-              height={48}
-              className="w-10 h-10 md:w-12 md:h-12"
-            />
+            {/* Logo 图标 */}
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-zk-red rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:bg-zk-blue transition-colors">
+              ZK
+            </div>
             
             {/* 学校名称 */}
             <div className="flex flex-col">

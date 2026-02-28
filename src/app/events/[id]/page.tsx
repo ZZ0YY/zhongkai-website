@@ -147,7 +147,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd) }}
       />
-      <PageHeader title="校园活动" subtitle={title} bgImage={event.image} />
+      {/* 页面横幅 - as="h2" 避免与文章标题 h1 冲突 */}
+      <PageHeader title="校园活动" subtitle={title} bgImage={event.image} as="h2" />
 
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">

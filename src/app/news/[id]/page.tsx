@@ -170,11 +170,12 @@ export default async function NewsDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(newsArticleJsonLd) }}
       />
-      {/* 页面横幅 */}
+      {/* 页面横幅 - as="h2" 避免与文章标题 h1 冲突 */}
       <PageHeader 
         title={post.category || '新闻动态'} 
         subtitle={title}
         bgImage={post.image}
+        as="h2"
       />
 
       {/* 文章内容 */}

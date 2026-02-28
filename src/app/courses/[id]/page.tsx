@@ -103,7 +103,8 @@ export default async function CourseDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(courseJsonLd) }}
       />
-      <PageHeader title={course.type} subtitle={title} bgImage={course.image} />
+      {/* 页面横幅 - as="h2" 避免与文章标题 h1 冲突 */}
+      <PageHeader title={course.type} subtitle={title} bgImage={course.image} as="h2" />
 
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
