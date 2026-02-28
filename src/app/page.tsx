@@ -41,54 +41,53 @@ export default async function HomePage() {
     <div>
       {/* ==================================================================
           Hero 横幅区域（含轮播图）
-          【修复】添加 heroMode，调整 z-index 层级
+          【修复】使用 fillMode 让图片填满容器，调整层级确保按钮可点击
           ================================================================== */}
-      <section className="relative h-[600px] md:h-[800px] flex items-center overflow-hidden">
-        {/* 轮播图背景 - z-10 */}
-        <div className="absolute inset-0 z-10">
+      <section className="relative h-[50vh] md:h-[70vh] lg:h-[800px] min-h-[400px] flex items-center overflow-hidden">
+        {/* 轮播图背景 - 填满整个区域 */}
+        <div className="absolute inset-0">
           <ImageCarousel 
             images={HERO_SLIDES.map(slide => ({
               src: slide.image,
               alt: slide.title,
-              caption: slide.title,
             }))}
             autoPlayInterval={5000}
-            heroMode={true}
+            fillMode={true}
           />
         </div>
         
-        {/* 渐变遮罩 - z-20（在轮播图之上，但按钮通过 heroMode 有 z-30） */}
-        <div className="absolute inset-0 z-20 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+        {/* 渐变遮罩 */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent pointer-events-none" />
         
-        {/* 内容区域 - z-30 */}
-        <div className="container mx-auto px-4 relative z-30 text-white">
+        {/* 内容区域 */}
+        <div className="container mx-auto px-4 relative text-white z-10 pointer-events-none">
           <div className="max-w-3xl">
             {/* 建校年份标签 */}
-            <span className="inline-block px-4 py-1 mb-6 border border-zk-gold text-zk-gold rounded-full text-sm font-bold tracking-wider uppercase animate-fade-in">
+            <span className="inline-block px-4 py-1 mb-6 border border-zk-gold text-zk-gold rounded-full text-sm font-bold tracking-wider uppercase animate-fade-in pointer-events-auto">
               EST. 1964
             </span>
             
             {/* 主标题 */}
-            <h1 className="text-5xl md:text-7xl font-bold font-serif-sc mb-6 leading-tight">
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold font-serif-sc mb-6 leading-tight">
               {HERO_SLIDES[0].title}
             </h1>
             
             {/* 副标题 */}
-            <p className="text-xl md:text-2xl text-gray-200 mb-10 font-light">
+            <p className="text-lg md:text-xl lg:text-2xl text-gray-200 mb-10 font-light">
               {HERO_SLIDES[0].subtitle}
             </p>
             
             {/* 行动按钮 */}
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 pointer-events-auto">
               <Link 
                 href="/about" 
-                className="px-8 py-4 bg-zk-red hover:bg-red-800 text-white font-bold rounded shadow-lg transition-transform hover:-translate-y-1"
+                className="px-6 md:px-8 py-3 md:py-4 bg-zk-red hover:bg-red-800 text-white font-bold rounded shadow-lg transition-transform hover:-translate-y-1"
               >
                 了解学校
               </Link>
               <Link 
                 href="/contact" 
-                className="px-8 py-4 bg-transparent border-2 border-white hover:bg-white hover:text-gray-900 text-white font-bold rounded transition-colors"
+                className="px-6 md:px-8 py-3 md:py-4 bg-transparent border-2 border-white hover:bg-white hover:text-gray-900 text-white font-bold rounded transition-colors"
               >
                 联系我们
               </Link>
@@ -110,7 +109,7 @@ export default async function HomePage() {
               </div>
               <h3 className="text-xl font-bold mb-3">悠久历史</h3>
               <p className="text-gray-600">
-                创办于1969年，五十余载文化积淀，薪火相传。
+                创办于1964年，五十余载文化积淀，薪火相传。
               </p>
             </div>
             
