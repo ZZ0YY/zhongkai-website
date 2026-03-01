@@ -85,7 +85,7 @@ export const SCHOOL_INFO: SchoolInfo = {
   founded: 1964, // 前身为陈江农业中学，1964年创办
   level: "广东省一级学校",
   description: "仲恺中学是以中国民主革命先驱、伟大的爱国主义者廖仲恺先生的名字命名的名人纪念性完全中学，是惠州仲恺高新区唯一的一所区直属中学，广东省一级学校。",
-  studentOrgName: "仲恺中学融媒体中心 & 信息社",
+  studentOrgName: "仲恺中学学生社团",
   motto: "人生最重是精神，精神日新德日新",
   philosophy: "师名人风范，育一代英才", // 办学理念
   strategy: "三品三促", // 办学思路
