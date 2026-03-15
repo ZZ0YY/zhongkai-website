@@ -5,10 +5,14 @@
 import type { Metadata } from "next";
 import { Noto_Sans_SC, Noto_Serif_SC } from "next/font/google";
 import "./globals.css";
+import Script from "next/script";
 import { Header, Footer } from "@/components/school";
 import { SCHOOL_INFO, SITE_CONFIG, PAGE_CONFIGS } from "@/lib/data";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+
+// Google Analytics 追踪 ID
+const GA_MEASUREMENT_ID = "G-4VCY02G1FZ";
 
 // 字体配置
 const notoSansSC = Noto_Sans_SC({
@@ -64,6 +68,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
+      {/* Google Analytics - gtag.js */}
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+        strategy="afterInteractive"
+      />
+      <Script id="google-analytics" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', '${GA_MEASUREMENT_ID}');
+        `}
+      </Script>
       <body className={`${notoSansSC.variable} ${notoSerifSC.variable} font-sans antialiased`}>
         <div className="flex flex-col min-h-screen">
           <Header />
