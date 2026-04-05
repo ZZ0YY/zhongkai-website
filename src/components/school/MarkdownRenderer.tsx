@@ -10,13 +10,15 @@
  * - 列表样式
  * - 引用块样式
  * - 代码块样式
- * - 图片样式
+ * - 图片样式（支持点击无损放大查看 Lightbox）
  * 
  * 【使用方法】
  * import { MarkdownRenderer } from '@/components/school/MarkdownRenderer';
  * 
  * <MarkdownRenderer html={content.html} />
  */
+
+import { MarkdownContent } from './ZoomableImage';
 
 interface MarkdownRendererProps {
   /** 转换后的 HTML 内容 */
@@ -32,34 +34,31 @@ interface MarkdownRendererProps {
  * - prose: Tailwind 的排版类，提供默认的文章样式
  * - prose-lg: 较大的字体
  * - max-w-none: 不限制最大宽度
+ * - 图片通过 MarkdownContent 自动解析为 ZoomableImage 组件
  */
 export function MarkdownRenderer({ html, className = '' }: MarkdownRendererProps) {
-  return (
-    <div 
-      className={`prose prose-lg max-w-none
-        prose-headings:font-serif-sc prose-headings:text-gray-900
-        prose-h1:text-3xl prose-h1:border-b prose-h1:border-gray-200 prose-h1:pb-4
-        prose-h2:text-2xl prose-h2:text-zk-blue prose-h2:mt-8
-        prose-h3:text-xl prose-h3:text-zk-red
-        prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4
-        prose-a:text-zk-blue prose-a:no-underline hover:prose-a:underline
-        prose-strong:text-gray-900 prose-strong:font-bold
-        prose-blockquote:border-l-4 prose-blockquote:border-zk-gold prose-blockquote:bg-gray-50 prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:italic
-        prose-ul:list-disc prose-ul:pl-6
-        prose-ol:list-decimal prose-ol:pl-6
-        prose-li:text-gray-700 prose-li:mb-2
-        prose-code:bg-gray-100 prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-zk-red
-        prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto
-        prose-img:rounded-lg prose-img:shadow-md prose-img:mx-auto
-        prose-hr:border-gray-200 prose-hr:my-8
-        prose-table:w-full prose-table:border-collapse
-        prose-th:bg-gray-100 prose-th:p-3 prose-th:text-left prose-th:font-bold
-        prose-td:border prose-td:border-gray-200 prose-td:p-3
-        ${className}
-      `}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  );
+  const proseClasses = `prose prose-lg max-w-none
+    prose-headings:font-serif-sc prose-headings:text-gray-900
+    prose-h1:text-3xl prose-h1:border-b prose-h1:border-gray-200 prose-h1:pb-4
+    prose-h2:text-2xl prose-h2:text-zk-blue prose-h2:mt-8
+    prose-h3:text-xl prose-h3:text-zk-red
+    prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4
+    prose-a:text-zk-blue prose-a:no-underline hover:prose-a:underline
+    prose-strong:text-gray-900 prose-strong:font-bold
+    prose-blockquote:border-l-4 prose-blockquote:border-zk-gold prose-blockquote:bg-gray-50 prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:italic
+    prose-ul:list-disc prose-ul:pl-6
+    prose-ol:list-decimal prose-ol:pl-6
+    prose-li:text-gray-700 prose-li:mb-2
+    prose-code:bg-gray-100 prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-zk-red
+    prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto
+    prose-hr:border-gray-200 prose-hr:my-8
+    prose-table:w-full prose-table:border-collapse
+    prose-th:bg-gray-100 prose-th:p-3 prose-th:text-left prose-th:font-bold
+    prose-td:border prose-td:border-gray-200 prose-td:p-3
+    ${className}
+  `;
+
+  return <MarkdownContent html={html} className={proseClasses} />;
 }
 
 /**
