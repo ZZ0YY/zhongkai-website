@@ -9,10 +9,12 @@
 
 import { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { PageHeader, MarkdownRenderer } from "@/components/school";
 import { EVENTS_DATA, SCHOOL_INFO, SITE_CONFIG, BLOG_URL, getPostById, getCombinedPosts } from "@/lib/data";
 import { getMarkdownContent, parseFrontmatter, markdownToHtml } from "@/lib/markdown";
+import { generateBreadcrumbJsonLd, generateSeoTitle, generateCanonicalUrl } from "@/lib/seo";
 
 export async function generateStaticParams() {
   const posts = await getCombinedPosts('events');
@@ -33,10 +35,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const canonicalUrl = `${SITE_CONFIG.url}/events/${id}`;
   
   return {
-    title: `${title} - ${SCHOOL_INFO.name}`,
+    title: generateSeoTitle(title),
     description: post?.summary || event?.description || `${title} - ${event?.location}`,
     alternates: {
-      canonical: canonicalUrl,
+      canonical: generateCanonicalUrl(`/events/${id}`),
     },
     openGraph: {
       title: title,
@@ -111,6 +113,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
     ? mdContent.frontmatter.title 
     : event.title;
   
+  // 构建 JSON-LD 结构化数据 - BreadcrumbList
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd('events', title);
+
   // 构建 JSON-LD 结构化数据 - Article (活动)
   const eventJsonLd = {
     "@context": "https://schema.org",
@@ -142,6 +147,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   
   return (
     <div>
+      {/* JSON-LD 结构化数据 - BreadcrumbList */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* JSON-LD 结构化数据 - Article */}
       <script
         type="application/ld+json"
@@ -185,8 +195,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               )}
             </div>
             
-            <div className="mb-8 rounded-lg overflow-hidden">
-              <img src={event.image} alt={title} className="w-full h-auto" loading="lazy" />
+            <div className="mb-8 rounded-lg overflow-hidden relative aspect-video bg-gray-100">
+              <Image
+                src={event.image}
+                alt={title}
+                fill
+                sizes="100vw"
+                className="object-cover"
+                
+              />
             </div>
             
             {/* 活动日期卡片 */}

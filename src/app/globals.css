@@ -78,3 +78,35 @@ html {
 .delay-300 {
   animation-delay: 0.3s;
 }
+
+/* ============================================================================
+ * Markdown 图片 CLS 防护
+ * ============================================================================
+ * Markdown 渲染的图片无法预知尺寸，加载时会导致页面上下跳动（CLS）。
+ * 通过 min-height 和占位背景色，在图片加载完成前预留空间，
+ * 确保页面布局稳定。
+ */
+.prose img {
+  /* 设置最小高度，防止图片加载前的 0 高度塌陷 */
+  min-height: 200px;
+  /* 加载前显示淡灰色占位背景，视觉提示正在加载 */
+  background-color: #f3f4f6;
+  /* 确保图片为块级元素，消除行内元素底部间距 */
+  display: block;
+  /* 设置默认宽高比，让浏览器在图片加载前就能预留正确的空间 */
+  aspect-ratio: 16 / 9;
+  /* 加载平滑过渡 */
+  transition: opacity 0.3s ease;
+  /* 防止图片尺寸异常时溢出容器 */
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* 小尺寸图片（如 inline 图标、表情）不应被强制拉伸 */
+.prose img[src*="emoji"],
+.prose img[width],
+.prose img[height] {
+  min-height: unset;
+  aspect-ratio: unset;
+}

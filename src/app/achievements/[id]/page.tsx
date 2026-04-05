@@ -9,10 +9,12 @@
 
 import { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { PageHeader, MarkdownRenderer } from "@/components/school";
 import { SCHOOL_INFO, SITE_CONFIG, BLOG_URL, getPostById, getCombinedPosts } from "@/lib/data";
 import { getMarkdownContent, parseFrontmatter, markdownToHtml } from "@/lib/markdown";
+import { generateBreadcrumbJsonLd, generateSeoTitle, generateCanonicalUrl } from "@/lib/seo";
 
 export async function generateStaticParams() {
   const posts = await getCombinedPosts('achievements');
@@ -31,10 +33,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const canonicalUrl = `${SITE_CONFIG.url}/achievements/${id}`;
   
   return {
-    title: `${post.title} - ${SCHOOL_INFO.name}`,
+    title: generateSeoTitle(post.title),
     description: post.summary || post.title,
     alternates: {
-      canonical: canonicalUrl,
+      canonical: generateCanonicalUrl(`/achievements/${id}`),
     },
     openGraph: {
       title: post.title,
@@ -96,6 +98,9 @@ export default async function AchievementDetailPage({ params }: { params: Promis
     ? mdContent.frontmatter.title 
     : post.title;
   
+  // 构建 JSON-LD 结构化数据 - BreadcrumbList
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd('achievements', title);
+
   // 构建 JSON-LD 结构化数据 - Article (办学成果)
   const achievementJsonLd = {
     "@context": "https://schema.org",
@@ -127,6 +132,11 @@ export default async function AchievementDetailPage({ params }: { params: Promis
   
   return (
     <div>
+      {/* JSON-LD 结构化数据 - BreadcrumbList */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* JSON-LD 结构化数据 - Article */}
       <script
         type="application/ld+json"
@@ -171,8 +181,15 @@ export default async function AchievementDetailPage({ params }: { params: Promis
               </span>
             </div>
             
-            <div className="mb-8 rounded-lg overflow-hidden">
-              <img src={post.image} alt={title} className="w-full h-auto" loading="eager" />
+            <div className="mb-8 rounded-lg overflow-hidden relative aspect-video bg-gray-100">
+              <Image
+                src={post.image}
+                alt={title}
+                fill
+                sizes="100vw"
+                className="object-cover"
+                priority
+              />
             </div>
             
             {/* 文章正文 */}

@@ -4,10 +4,12 @@
 
 import { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { PageHeader, MarkdownRenderer } from "@/components/school";
 import { SOFTWARE_DATA, SCHOOL_INFO, SITE_CONFIG } from "@/lib/data";
 import { getMarkdownContent } from "@/lib/markdown";
+import { generateBreadcrumbJsonLd, generateSeoTitle, generateCanonicalUrl } from "@/lib/seo";
 
 export async function generateStaticParams() {
   return SOFTWARE_DATA.map((software) => ({
@@ -27,10 +29,10 @@ export async function generateMetadata({
   const canonicalUrl = `${SITE_CONFIG.url}/software/${id}`;
   
   return {
-    title: `${software.title} - ${SCHOOL_INFO.name}`,
+    title: generateSeoTitle(software.title),
     description: software.description,
     alternates: {
-      canonical: canonicalUrl,
+      canonical: generateCanonicalUrl(`/software/${id}`),
     },
     openGraph: {
       title: software.title,
@@ -69,6 +71,9 @@ export default async function SoftwareDetailPage({
     ? mdContent.frontmatter.title 
     : software.title;
   
+  // 构建 JSON-LD 结构化数据 - BreadcrumbList
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd('software', title);
+
   // 构建 JSON-LD 结构化数据 - SoftwareApplication
   const softwareJsonLd = {
     "@context": "https://schema.org",
@@ -105,6 +110,11 @@ export default async function SoftwareDetailPage({
   
   return (
     <div>
+      {/* JSON-LD 结构化数据 - BreadcrumbList */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* JSON-LD 结构化数据 - SoftwareApplication */}
       <script
         type="application/ld+json"
@@ -143,8 +153,15 @@ export default async function SoftwareDetailPage({
               </div>
             </div>
             
-            <div className="mb-8 rounded-lg overflow-hidden">
-              <img src={software.image} alt={title} className="w-full h-auto" loading="eager" />
+            <div className="mb-8 rounded-lg overflow-hidden relative aspect-video bg-gray-100">
+              <Image
+                src={software.image}
+                alt={title}
+                fill
+                sizes="100vw"
+                className="object-cover"
+                priority
+              />
             </div>
             
             <div className="flex flex-wrap gap-4 mb-8">

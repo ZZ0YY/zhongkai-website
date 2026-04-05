@@ -4,10 +4,12 @@
 
 import { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { PageHeader, MarkdownRenderer } from "@/components/school";
 import { COURSES_DATA, SCHOOL_INFO, SITE_CONFIG } from "@/lib/data";
 import { getMarkdownContent } from "@/lib/markdown";
+import { generateBreadcrumbJsonLd, generateSeoTitle, generateCanonicalUrl } from "@/lib/seo";
 
 export async function generateStaticParams() {
   return COURSES_DATA.map((course) => ({
@@ -27,10 +29,10 @@ export async function generateMetadata({
   const canonicalUrl = `${SITE_CONFIG.url}/courses/${id}`;
   
   return {
-    title: `${course.title} - ${SCHOOL_INFO.name}`,
+    title: generateSeoTitle(course.title),
     description: course.description,
     alternates: {
-      canonical: canonicalUrl,
+      canonical: generateCanonicalUrl(`/courses/${id}`),
     },
     openGraph: {
       title: course.title,
@@ -69,6 +71,9 @@ export default async function CourseDetailPage({
     ? mdContent.frontmatter.title 
     : course.title;
   
+  // 构建 JSON-LD 结构化数据 - BreadcrumbList
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd('courses', title);
+
   // 构建 JSON-LD 结构化数据 - Article (课程)
   const courseJsonLd = {
     "@context": "https://schema.org",
@@ -98,6 +103,11 @@ export default async function CourseDetailPage({
   
   return (
     <div>
+      {/* JSON-LD 结构化数据 - BreadcrumbList */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* JSON-LD 结构化数据 - Article */}
       <script
         type="application/ld+json"
@@ -125,8 +135,15 @@ export default async function CourseDetailPage({
               }`}>{course.type}</span>
             </div>
             
-            <div className="mb-8 rounded-lg overflow-hidden">
-              <img src={course.image} alt={title} className="w-full h-auto" loading="lazy" />
+            <div className="mb-8 rounded-lg overflow-hidden relative aspect-video bg-gray-100">
+              <Image
+                src={course.image}
+                alt={title}
+                fill
+                sizes="100vw"
+                className="object-cover"
+                
+              />
             </div>
             
             <div className="mb-8 p-6 bg-gray-50 rounded-lg">

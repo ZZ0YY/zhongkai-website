@@ -11,10 +11,12 @@
 
 import { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { PageHeader, MarkdownRenderer } from "@/components/school";
 import { SCHOOL_INFO, SITE_CONFIG, PAGE_CONFIGS, BLOG_URL, getPostById, getCombinedPosts } from "@/lib/data";
 import { getMarkdownContent, parseFrontmatter, markdownToHtml } from "@/lib/markdown";
+import { generateBreadcrumbJsonLd, generateSeoTitle, generateCanonicalUrl } from "@/lib/seo";
 
 // ============================================================================
 // ISR 配置 - 60秒重新验证
@@ -52,11 +54,11 @@ export async function generateMetadata({
   const canonicalUrl = `${SITE_CONFIG.url}/news/${id}`;
   
   return {
-    title: `${post.title} - ${SCHOOL_INFO.name}`,
+    title: generateSeoTitle(post.title),
     description: post.summary || post.title,
     keywords: [post.category || '新闻', SCHOOL_INFO.name],
     alternates: {
-      canonical: canonicalUrl,
+      canonical: generateCanonicalUrl(`/news/${id}`),
     },
     openGraph: {
       title: post.title,
@@ -134,6 +136,9 @@ export default async function NewsDetailPage({
     ? mdContent.frontmatter.title 
     : post.title;
   
+  // 构建 JSON-LD 结构化数据 - BreadcrumbList
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd('news', title);
+
   // 构建 JSON-LD 结构化数据 - NewsArticle
   const newsArticleJsonLd = {
     "@context": "https://schema.org",
@@ -165,6 +170,11 @@ export default async function NewsDetailPage({
   
   return (
     <div>
+      {/* JSON-LD 结构化数据 - BreadcrumbList */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* JSON-LD 结构化数据 - NewsArticle */}
       <script
         type="application/ld+json"
@@ -233,12 +243,14 @@ export default async function NewsDetailPage({
             </div>
             
             {/* 封面图 */}
-            <div className="mb-8 rounded-lg overflow-hidden">
-              <img 
-                src={post.image} 
-                alt={title} 
-                className="w-full h-auto"
-                loading="eager"
+            <div className="mb-8 rounded-lg overflow-hidden relative aspect-video bg-gray-100">
+              <Image
+                src={post.image}
+                alt={title}
+                fill
+                sizes="100vw"
+                className="object-cover"
+                priority
               />
             </div>
             

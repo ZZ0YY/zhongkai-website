@@ -9,10 +9,12 @@
 
 import { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { PageHeader, MarkdownRenderer } from "@/components/school";
 import { TEACHERS_DATA, SCHOOL_INFO, SITE_CONFIG, BLOG_URL, getPostById, getCombinedPosts } from "@/lib/data";
 import { getMarkdownContent, parseFrontmatter, markdownToHtml } from "@/lib/markdown";
+import { generateBreadcrumbJsonLd, generateSeoTitle, generateCanonicalUrl } from "@/lib/seo";
 
 export async function generateStaticParams() {
   const posts = await getCombinedPosts('teachers');
@@ -33,10 +35,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const canonicalUrl = `${SITE_CONFIG.url}/teachers/${id}`;
   
   return {
-    title: `${title} - ${SCHOOL_INFO.name}`,
+    title: generateSeoTitle(title),
     description: post?.summary || localTeacher?.description || '',
     alternates: {
-      canonical: canonicalUrl,
+      canonical: generateCanonicalUrl(`/teachers/${id}`),
     },
     openGraph: {
       title: title,
@@ -104,6 +106,9 @@ export default async function TeacherDetailPage({ params }: { params: Promise<{ 
     ? mdContent.frontmatter.title 
     : (localTeacher?.name || post?.title || '教师详情');
   
+  // 构建 JSON-LD 结构化数据 - BreadcrumbList
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd('teachers', title);
+
   // 构建 JSON-LD 结构化数据 - Person (教师)
   const teacherJsonLd = {
     "@context": "https://schema.org",
@@ -124,6 +129,11 @@ export default async function TeacherDetailPage({ params }: { params: Promise<{ 
   
   return (
     <div>
+      {/* JSON-LD 结构化数据 - BreadcrumbList */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* JSON-LD 结构化数据 - Person */}
       <script
         type="application/ld+json"
@@ -145,8 +155,8 @@ export default async function TeacherDetailPage({ params }: { params: Promise<{ 
             
             <div className="flex flex-col md:flex-row gap-8">
               <div className="w-full md:w-1/3">
-                <div className="rounded-lg overflow-hidden shadow-lg">
-                  <img src={teacher.image} alt={title} className="w-full h-auto" loading="lazy" />
+                <div className="rounded-lg overflow-hidden shadow-lg relative aspect-[3/4] bg-gray-100">
+                  <Image src={teacher.image} alt={title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
                 </div>
               </div>
               
