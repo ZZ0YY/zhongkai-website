@@ -80,7 +80,7 @@ export const SCHOOL_INFO: SchoolInfo = {
   name: "惠州仲恺中学",
   fullName: "惠州市仲恺中学",
   address: "广东省惠州市仲恺高新区陈江街道",
-  phone: "0752-3323215",
+  phone: "0752-3083480",
   email: "zyj2111479855@gmail.com",
   founded: 1964, // 前身为陈江农业中学，1964年创办
   level: "广东省一级学校",
