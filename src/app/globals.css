@@ -109,3 +109,318 @@ html {
 body.lightbox-open {
   overflow: hidden;
 }
+
+/**
+ * ============================================================================
+ * Markdown 增强样式 (v2) - 惠州仲恺中学官网
+ * ============================================================================
+ *
+ * 【使用说明】
+ * 将以下 CSS 内容追加到 src/app/globals.css 文件末尾即可。
+ * 不要替换现有样式，只在原有 globals.css 的末尾添加这些新样式。
+ *
+ * 【新增功能】
+ * 1. highlight.js 代码高亮主题（One Dark 风格）
+ * 2. 代码块容器样式（头部 + 复制按钮）
+ * 3. 标题锚点链接样式（hover 显示）
+ * 4. 表格响应式容器
+ * 5. 任务列表复选框样式
+ * 6. GFM 告示框样式 (GitHub 风格)
+ * 7. 脚注样式
+ */
+
+/* ============================================================================
+ * 代码块增强样式
+ * ============================================================================ */
+
+/* 代码块外层容器 */
+.code-block-wrapper {
+  @apply my-6 rounded-lg overflow-hidden;
+  @apply border border-gray-700;
+}
+
+/* 代码块头部（语言标签 + 复制按钮） */
+.code-block-header {
+  @apply flex items-center justify-between;
+  @apply px-4 py-2;
+  @apply bg-gray-800;
+  @apply text-gray-300 text-sm;
+}
+
+.code-lang {
+  @apply font-mono text-xs uppercase;
+  @apply text-gray-400;
+}
+
+.code-copy-btn {
+  @apply flex items-center gap-1.5;
+  @apply px-2 py-1 rounded text-xs;
+  @apply text-gray-400 hover:text-gray-200 hover:bg-gray-700;
+  @apply transition-colors duration-200;
+  @apply cursor-pointer;
+}
+
+.code-copy-btn:active {
+  @apply text-green-400;
+}
+
+/* 代码块 pre/code 样式覆盖 */
+.code-block-wrapper pre {
+  @apply !m-0 !rounded-none !p-4;
+  @apply overflow-x-auto;
+}
+
+.code-block-wrapper code {
+  @apply !bg-transparent !p-0 !text-sm;
+}
+
+/* 行内代码样式优化（已有 prose-code，这里只补充） */
+.prose code:not(pre code) {
+  @apply before:content-[''] after:content-[''];
+}
+
+/* ============================================================================
+ * 标题锚点链接样式
+ * ============================================================================ */
+
+/* 标题 hover 时显示链接图标 */
+.content-header {
+  position: relative;
+  scroll-margin-top: 80px; /* 偏移 Header 高度 */
+}
+
+.content-header-link {
+  position: absolute;
+  left: -24px;
+  top: 50%;
+  transform: translateY(-50%);
+  @apply text-gray-300 hover:text-zk-blue;
+  @apply opacity-0;
+  @apply transition-opacity duration-200;
+}
+
+.content-header:hover .content-header-link {
+  @apply opacity-100;
+}
+
+/* ============================================================================
+ * 表格响应式容器
+ * ============================================================================ */
+
+.table-wrapper {
+  @apply my-6 overflow-x-auto rounded-lg;
+  @apply border border-gray-200;
+}
+
+.table-wrapper table {
+  @apply !min-w-full;
+}
+
+.table-wrapper thead {
+  @apply bg-gray-50;
+}
+
+/* GFM 表格对齐支持 */
+.table-wrapper th[align="center"],
+.table-wrapper td[align="center"] {
+  @apply text-center;
+}
+
+.table-wrapper th[align="right"],
+.table-wrapper td[align="right"] {
+  @apply text-right;
+}
+
+/* ============================================================================
+ * 任务列表样式 (GFM)
+ * ============================================================================ */
+
+/* GFM 任务列表的复选框 */
+.prose input[type="checkbox"] {
+  @apply mr-2;
+  @apply w-4 h-4;
+  @apply rounded border-gray-300 text-zk-blue;
+  @apply cursor-pointer;
+  @apply accent-zk-blue;
+}
+
+/* 已完成的任务列表项 */
+.prose li:has(input[type="checkbox"]:checked) {
+  @apply text-gray-400 line-through;
+}
+
+/* 任务列表去掉默认列表标记 */
+.prose ul:has(input[type="checkbox"]) {
+  @apply list-none pl-0;
+}
+
+/* ============================================================================
+ * GFM 告示框样式 (GitHub 风格)
+ * ============================================================================
+ * 支持 Markdown 中的以下语法：
+ *   > [!NOTE] 标题
+ *   > 内容
+ *   > [!TIP] / [!IMPORTANT] / [!WARNING] / [!CAUTION]
+ *
+ * 注意：这需要 marked 支持。如果 marked 版本不支持 GitHub Alert，
+ *   可以在 markdown.ts 中添加 remark-github-blockquote-alert 插件。
+ *   或者用简单的 CSS 选择器实现类似效果。
+ * ============================================================================ */
+
+/* 告示框基础样式 */
+.prose blockquote {
+  @apply border-l-4 !p-4;
+  @apply rounded-r-lg;
+}
+
+/* GitHub 风格告示框的替代方案（使用 data 属性或 CSS class） */
+.prose blockquote.note,
+.prose blockquote[data-type="note"] {
+  @apply border-l-blue-500 bg-blue-50;
+}
+
+.prose blockquote.tip,
+.prose blockquote[data-type="tip"] {
+  @apply border-l-green-500 bg-green-50;
+}
+
+.prose blockquote.warning,
+.prose blockquote[data-type="warning"] {
+  @apply border-l-yellow-500 bg-yellow-50;
+}
+
+.prose blockquote.caution,
+.prose blockquote[data-type="caution"] {
+  @apply border-l-red-500 bg-red-50;
+}
+
+/* ============================================================================
+ * highlight.js 主题覆盖（One Dark 风格，适配学校网站配色）
+ * ============================================================================ */
+
+.hljs {
+  @apply bg-gray-900 text-gray-100;
+  @apply !p-0;
+}
+
+/* 基础 token 颜色 */
+.hljs-comment,
+.hljs-quote {
+  color: #5c6370;
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag {
+  color: #c678dd;
+}
+
+.hljs-string,
+.hljs-addition {
+  color: #98c379;
+}
+
+.hljs-number,
+.hljs-literal {
+  color: #d19a66;
+}
+
+.hljs-built_in,
+.hljs-type {
+  color: #e6c07b;
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-selector-id {
+  color: #61afef;
+  font-weight: bold;
+}
+
+.hljs-attr,
+.hljs-attribute {
+  color: #d19a66;
+}
+
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag {
+  color: #e06c75;
+}
+
+.hljs-name,
+.hljs-selector-class {
+  color: #e06c75;
+}
+
+.hljs-symbol,
+.hljs-bullet {
+  color: #56b6c2;
+}
+
+.hljs-meta {
+  color: #61afef;
+}
+
+.hljs-deletion {
+  color: #e06c75;
+  background-color: rgba(224, 108, 117, 0.1);
+}
+
+.hljs-addition {
+  background-color: rgba(152, 195, 121, 0.1);
+}
+
+/* ============================================================================
+ * 脚注样式
+ * ============================================================================ */
+
+.prose .footnotes {
+  @apply mt-12 pt-6;
+  @apply border-t border-gray-200;
+  @apply text-sm text-gray-500;
+}
+
+.prose .footnotes ol {
+  @apply list-decimal pl-4;
+}
+
+.prose sup a {
+  @apply no-underline text-zk-blue;
+}
+
+/* ============================================================================
+ * 删除线样式 (GFM)
+ * ============================================================================ */
+
+.prose del,
+.prose s {
+  @apply text-gray-400;
+}
+
+/* ============================================================================
+ * 滚动条美化（代码块横向滚动）
+ * ============================================================================ */
+
+.code-block-wrapper pre::-webkit-scrollbar,
+.table-wrapper::-webkit-scrollbar {
+  @apply h-2;
+}
+
+.code-block-wrapper pre::-webkit-scrollbar-track,
+.table-wrapper::-webkit-scrollbar-track {
+  @apply bg-gray-800 rounded;
+}
+
+.code-block-wrapper pre::-webkit-scrollbar-thumb,
+.table-wrapper::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 rounded;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+  @apply bg-gray-50 rounded;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded;
+}

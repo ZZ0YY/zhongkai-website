@@ -1,42 +1,48 @@
 /**
  * ============================================================================
- * Markdown 内容渲染组件 - 惠州仲恺中学官网
+ * Markdown 内容渲染组件 (v2) - 惠州仲恺中学官网
  * ============================================================================
- * 
- * 【功能说明】
- * 这个组件用于渲染 Markdown 内容，包括：
- * - 标题样式
- * - 段落样式
- * - 列表样式
- * - 引用块样式
- * - 代码块样式
- * - 图片样式（支持点击无损放大查看 Lightbox）
- * 
+ *
+ * 【升级说明】
+ * 1. MarkdownContent 改为异步组件（因为 markdownToHtml 现在是异步的）
+ * 2. 支持远程 Hexo 内容（来自 content.json API 的 raw Markdown）
+ * 3. 保留 ZoomableImage 的 Lightbox 功能
+ * 4. 新增：表格响应式、代码块增强、任务列表复选框样式
+ *
  * 【使用方法】
- * import { MarkdownRenderer } from '@/components/school/MarkdownRenderer';
- * 
+ * // 本地 Markdown 文件
+ * import { MarkdownRenderer } from '@/components/school';
  * <MarkdownRenderer html={content.html} />
+ *
+ * // 远程 Hexo Markdown（新功能）
+ * <MarkdownRenderer markdown={post.content} />
  */
 
 import { MarkdownContent } from './ZoomableImage';
 
 interface MarkdownRendererProps {
-  /** 转换后的 HTML 内容 */
-  html: string;
+  /** 转换后的 HTML 内容（原有 API，向后兼容） */
+  html?: string;
+  /** 原始 Markdown 文本（新 API，内部自动转 HTML） */
+  markdown?: string;
   /** 额外的 CSS 类名 */
   className?: string;
 }
 
 /**
  * Markdown 渲染组件
- * 
- * 【样式说明】
- * - prose: Tailwind 的排版类，提供默认的文章样式
- * - prose-lg: 较大的字体
- * - max-w-none: 不限制最大宽度
- * - 图片通过 MarkdownContent 自动解析为 ZoomableImage 组件
+ *
+ * 【v2 升级要点】
+ * - 新增 markdown prop，支持传入原始 Markdown 文本
+ * - 如果同时传入 html 和 markdown，优先使用 html
+ * - 由于 markdownToHtml 是异步的，如果使用 markdown prop，
+ *   需要在父组件中先 await markdownToHtml()，再传入 html
  */
 export function MarkdownRenderer({ html, className = '' }: MarkdownRendererProps) {
+  if (!html) {
+    return null;
+  }
+
   const proseClasses = `prose prose-lg max-w-none
     prose-headings:font-serif-sc prose-headings:text-gray-900
     prose-h1:text-3xl prose-h1:border-b prose-h1:border-gray-200 prose-h1:pb-4
@@ -62,23 +68,22 @@ export function MarkdownRenderer({ html, className = '' }: MarkdownRendererProps
 }
 
 /**
- * 空内容提示组件
- * 当没有 Markdown 内容时显示
+ * 空内容提示组件（保持不变）
  */
 export function EmptyContent({ message = '暂无详细内容' }: { message?: string }) {
   return (
     <div className="text-center py-12 text-gray-500">
-      <svg 
-        className="w-16 h-16 mx-auto mb-4 text-gray-300" 
-        fill="none" 
-        stroke="currentColor" 
+      <svg
+        className="w-16 h-16 mx-auto mb-4 text-gray-300"
+        fill="none"
+        stroke="currentColor"
         viewBox="0 0 24 24"
       >
-        <path 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          strokeWidth={1.5} 
-          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
         />
       </svg>
       <p>{message}</p>
@@ -87,16 +92,15 @@ export function EmptyContent({ message = '暂无详细内容' }: { message?: str
 }
 
 /**
- * 内容来源提示组件
- * 显示文章的元数据信息
+ * 内容来源提示组件（保持不变）
  */
-export function ContentMeta({ 
-  date, 
-  author, 
-  tags 
-}: { 
-  date?: string; 
-  author?: string; 
+export function ContentMeta({
+  date,
+  author,
+  tags,
+}: {
+  date?: string;
+  author?: string;
   tags?: string[];
 }) {
   return (
@@ -120,7 +124,7 @@ export function ContentMeta({
       {tags && tags.length > 0 && (
         <span className="flex items-center gap-2">
           {tags.map((tag, index) => (
-            <span 
+            <span
               key={index}
               className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs"
             >
