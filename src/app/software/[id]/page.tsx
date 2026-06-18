@@ -1,5 +1,11 @@
 /**
- * 教学软件详情页面 - 惠州仲恺中学官网
+ * ============================================================================
+ * 教学软件详情页面 - 修复版
+ * ============================================================================
+ *
+ * 【修复】添加 dynamicParams + return notFound() 防御
+ * 注意：software 页面只使用本地静态数据（SOFTWARE_DATA），不依赖远程 API，
+ *   所以问题不如其他页面严重，但仍建议加上防御性代码。
  */
 
 import { Metadata } from "next";
@@ -11,23 +17,25 @@ import { SOFTWARE_DATA, SCHOOL_INFO, SITE_CONFIG } from "@/lib/data";
 import { getMarkdownContent } from "@/lib/markdown";
 import { generateBreadcrumbJsonLd, generateSeoTitle, generateCanonicalUrl } from "@/lib/seo";
 
+// 【关键修复 1】构建失败的页面回退到请求时动态渲染
+export const dynamicParams = true;
+
 export async function generateStaticParams() {
   return SOFTWARE_DATA.map((software) => ({
     id: software.id.toString(),
   }));
 }
 
-export async function generateMetadata({ 
-  params 
+export async function generateMetadata({
+  params
 }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const software = SOFTWARE_DATA.find((s) => s.id.toString() === id);
-  
+
   if (!software) return { title: "软件未找到" };
-  
-  // Canonical URL
+
   const canonicalUrl = `${SITE_CONFIG.url}/software/${id}`;
-  
+
   return {
     title: generateSeoTitle(software.title),
     description: software.description,
@@ -57,24 +65,25 @@ export async function generateMetadata({
   };
 }
 
-export default async function SoftwareDetailPage({ 
-  params 
+export default async function SoftwareDetailPage({
+  params
 }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const software = SOFTWARE_DATA.find((s) => s.id.toString() === id);
-  
-  if (!software) notFound();
-  
-  const mdContent = getMarkdownContent('software', id);
-  
-  const title = mdContent.exists && mdContent.frontmatter.title 
-    ? mdContent.frontmatter.title 
+
+  // 【关键修复】return notFound() 确保中断执行
+  if (!software) {
+    return notFound();
+  }
+
+  const mdContent = await getMarkdownContent('software', id);
+
+  const title = mdContent.exists && mdContent.frontmatter.title
+    ? mdContent.frontmatter.title
     : software.title;
-  
-  // 构建 JSON-LD 结构化数据 - BreadcrumbList
+
   const breadcrumbJsonLd = generateBreadcrumbJsonLd('software', title);
 
-  // 构建 JSON-LD 结构化数据 - SoftwareApplication
   const softwareJsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -82,9 +91,7 @@ export default async function SoftwareDetailPage({
     "applicationCategory": software.category,
     "operatingSystem": software.platform.join(', '),
     "description": software.description,
-    "image": [
-      software.image,
-    ],
+    "image": [software.image],
     "offers": {
       "@type": "Offer",
       "price": "0",
@@ -107,20 +114,12 @@ export default async function SoftwareDetailPage({
       "@id": `${SITE_CONFIG.url}/software/${id}`,
     },
   };
-  
+
   return (
     <div>
-      {/* JSON-LD 结构化数据 - BreadcrumbList */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
-      {/* JSON-LD 结构化数据 - SoftwareApplication */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
-      />
-      {/* 页面横幅 - as="h2" 避免与文章标题 h1 冲突 */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }} />
+
       <PageHeader title={software.category} subtitle={title} bgImage={software.image} as="h2" />
 
       <section className="py-20 bg-white">
@@ -132,9 +131,9 @@ export default async function SoftwareDetailPage({
               </svg>
               返回软件列表
             </Link>
-            
+
             <h1 className="text-3xl md:text-4xl font-bold font-serif-sc text-gray-900 mb-6">{title}</h1>
-            
+
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-8 pb-8 border-b border-gray-200">
               <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${
                 software.category === '教学工具' ? 'bg-zk-red' :
@@ -146,24 +145,15 @@ export default async function SoftwareDetailPage({
               <div className="flex items-center gap-2">
                 <span>支持平台：</span>
                 {software.platform.map((platform, index) => (
-                  <span key={index} className="px-2 py-1 bg-gray-100 rounded text-xs">
-                    {platform}
-                  </span>
+                  <span key={index} className="px-2 py-1 bg-gray-100 rounded text-xs">{platform}</span>
                 ))}
               </div>
             </div>
-            
+
             <div className="mb-8 rounded-lg overflow-hidden relative aspect-video bg-gray-100">
-              <Image
-                src={software.image}
-                alt={title}
-                fill
-                sizes="100vw"
-                className="object-cover"
-                priority
-              />
+              <Image src={software.image} alt={title} fill sizes="100vw" className="object-cover" priority />
             </div>
-            
+
             <div className="flex flex-wrap gap-4 mb-8">
               {software.downloadUrl && (
                 <a href={software.downloadUrl} target="_blank" rel="noopener noreferrer"
@@ -178,19 +168,17 @@ export default async function SoftwareDetailPage({
                 </a>
               )}
             </div>
-            
+
             {software.tags && software.tags.length > 0 && (
               <div className="mb-8">
                 <div className="flex flex-wrap gap-2">
                   {software.tags.map((tag, index) => (
-                    <span key={index} className="px-3 py-1 bg-red-50 text-zk-red rounded-full text-sm">
-                      {tag}
-                    </span>
+                    <span key={index} className="px-3 py-1 bg-red-50 text-zk-red rounded-full text-sm">{tag}</span>
                   ))}
                 </div>
               </div>
             )}
-            
+
             {mdContent.exists && mdContent.html ? (
               <MarkdownRenderer html={mdContent.html} />
             ) : (
@@ -198,15 +186,15 @@ export default async function SoftwareDetailPage({
                 <p className="text-gray-700 leading-relaxed mb-6">{software.description}</p>
               </div>
             )}
-            
+
             <div className="mt-12 p-6 bg-gray-50 rounded-lg">
               <h3 className="text-lg font-bold mb-4">平台兼容性</h3>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {['Windows', 'Mac', 'Linux', 'Web', 'iOS', 'Android'].map((platform) => (
                   <div key={platform}
                     className={`p-3 rounded text-center text-sm ${
-                      software.platform.includes(platform) 
-                        ? 'bg-green-100 text-green-700' 
+                      software.platform.includes(platform)
+                        ? 'bg-green-100 text-green-700'
                         : 'bg-gray-100 text-gray-400'
                     }`}>
                     {platform}

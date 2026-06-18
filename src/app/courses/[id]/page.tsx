@@ -1,5 +1,10 @@
 /**
- * 课程详情页面 - 惠州仲恺中学官网
+ * ============================================================================
+ * 课程详情页面 - 修复版
+ * ============================================================================
+ *
+ * 【修复】添加 dynamicParams + return notFound() 防御
+ * 注意：courses 页面只使用本地静态数据（COURSES_DATA），不依赖远程 API
  */
 
 import { Metadata } from "next";
@@ -11,23 +16,25 @@ import { COURSES_DATA, SCHOOL_INFO, SITE_CONFIG } from "@/lib/data";
 import { getMarkdownContent } from "@/lib/markdown";
 import { generateBreadcrumbJsonLd, generateSeoTitle, generateCanonicalUrl } from "@/lib/seo";
 
+// 【关键修复 1】构建失败的页面回退到请求时动态渲染
+export const dynamicParams = true;
+
 export async function generateStaticParams() {
   return COURSES_DATA.map((course) => ({
     id: course.id.toString(),
   }));
 }
 
-export async function generateMetadata({ 
-  params 
+export async function generateMetadata({
+  params
 }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const course = COURSES_DATA.find((c) => c.id.toString() === id);
-  
+
   if (!course) return { title: "课程未找到" };
-  
-  // Canonical URL
+
   const canonicalUrl = `${SITE_CONFIG.url}/courses/${id}`;
-  
+
   return {
     title: generateSeoTitle(course.title),
     description: course.description,
@@ -57,31 +64,30 @@ export async function generateMetadata({
   };
 }
 
-export default async function CourseDetailPage({ 
-  params 
+export default async function CourseDetailPage({
+  params
 }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const course = COURSES_DATA.find((c) => c.id.toString() === id);
-  
-  if (!course) notFound();
-  
-  const mdContent = getMarkdownContent('courses', id);
-  
-  const title = mdContent.exists && mdContent.frontmatter.title 
-    ? mdContent.frontmatter.title 
+
+  // 【关键修复】return notFound() 确保中断执行
+  if (!course) {
+    return notFound();
+  }
+
+  const mdContent = await getMarkdownContent('courses', id);
+
+  const title = mdContent.exists && mdContent.frontmatter.title
+    ? mdContent.frontmatter.title
     : course.title;
-  
-  // 构建 JSON-LD 结构化数据 - BreadcrumbList
+
   const breadcrumbJsonLd = generateBreadcrumbJsonLd('courses', title);
 
-  // 构建 JSON-LD 结构化数据 - Article (课程)
   const courseJsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
     "headline": title,
-    "image": [
-      course.image,
-    ],
+    "image": [course.image],
     "author": {
       "@type": "Organization",
       "name": SCHOOL_INFO.name,
@@ -100,20 +106,12 @@ export default async function CourseDetailPage({
       "@id": `${SITE_CONFIG.url}/courses/${id}`,
     },
   };
-  
+
   return (
     <div>
-      {/* JSON-LD 结构化数据 - BreadcrumbList */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
-      {/* JSON-LD 结构化数据 - Article */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(courseJsonLd) }}
-      />
-      {/* 页面横幅 - as="h2" 避免与文章标题 h1 冲突 */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(courseJsonLd) }} />
+
       <PageHeader title={course.type} subtitle={title} bgImage={course.image} as="h2" />
 
       <section className="py-20 bg-white">
@@ -125,27 +123,20 @@ export default async function CourseDetailPage({
               </svg>
               返回课程列表
             </Link>
-            
+
             <h1 className="text-3xl md:text-4xl font-bold font-serif-sc text-gray-900 mb-6">{title}</h1>
-            
+
             <div className="flex items-center gap-4 text-sm text-gray-500 mb-8 pb-8 border-b border-gray-200">
               <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${
                 course.type === '国家课程' ? 'bg-zk-blue' :
                 course.type === '校本课程' ? 'bg-zk-red' : 'bg-zk-gold'
               }`}>{course.type}</span>
             </div>
-            
+
             <div className="mb-8 rounded-lg overflow-hidden relative aspect-video bg-gray-100">
-              <Image
-                src={course.image}
-                alt={title}
-                fill
-                sizes="100vw"
-                className="object-cover"
-                
-              />
+              <Image src={course.image} alt={title} fill sizes="100vw" className="object-cover" />
             </div>
-            
+
             <div className="mb-8 p-6 bg-gray-50 rounded-lg">
               <h3 className="text-lg font-bold text-gray-900 mb-4">课程特色</h3>
               <div className="flex flex-wrap gap-2">
@@ -154,7 +145,7 @@ export default async function CourseDetailPage({
                 ))}
               </div>
             </div>
-            
+
             {mdContent.exists && mdContent.html ? (
               <MarkdownRenderer html={mdContent.html} />
             ) : (
