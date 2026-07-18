@@ -1,22 +1,22 @@
 /**
  * ============================================================================
- * Markdown 内容解析工具 (v2) - 惠州仲恺中学官网
+ * Markdown 内容解析工具 (v3) - 惠州仲恺中学官网
  * ============================================================================
  *
- * 【升级说明】
- * 从手写正则解析器升级到 marked + unified 插件管道：
- * ✅ 完整的 CommonMark + GFM 支持（表格、任务列表、删除线）
- * ✅ 代码块语法高亮（highlight.js）
- * ✅ 标题自动生成锚点 ID
- * ✅ 安全的 HTML 输出（DOMPurify 防XSS）
+ * 【升级说明 v3】
+ * ❌ 移除 jsdom + dompurify（jsdom 在 Vercel Serverless 环境中
+ *    因 @exodus/bytes ESM-only 问题导致 ERR_REQUIRE_ESM 崩溃）
+ * ✅ 替换为 sanitize-html（纯字符串操作，无需 DOM 环境）
  * ✅ 保持与原 API 完全兼容（getMarkdownContent / getMarkdownIds / parseFrontmatter）
  *
- * 【依赖】
- * npm install marked highlight.js gray-matter dompurify @types/dompurify
+ * 【依赖变更】
+ * npm uninstall jsdom @types/jsdom dompurify @types/dompurify
+ * npm install sanitize-html @types/sanitize-html
  *
  * 【不依赖】
+ * ❌ 不需要 jsdom（已移除，彻底解决 ESM 兼容问题）
+ * ❌ 不需要 dompurify（已移除）
  * ❌ 不需要 contentlayer（已废弃）
- * ❌ 不需要 pliny
  * ❌ 不需要 remark/rehype（marked 已足够）
  */
 
@@ -25,14 +25,7 @@ import path from 'path';
 import { marked } from 'marked';
 import hljs from 'highlight.js';
 import matter from 'gray-matter';
-import DOMPurify from 'dompurify';
-import { JSDOM } from 'jsdom';
-
-// ============================================================================
-// DOMPurify 初始化（服务端需要 JSDOM）
-// ============================================================================
-const window = new JSDOM('').window;
-const purify = DOMPurify(window);
+import sanitizeHtml from 'sanitize-html';
 
 // ============================================================================
 // 类型定义（保持与原版完全兼容）
@@ -161,7 +154,7 @@ renderer.heading = function ({ text, depth }: { text: string; depth: number }) {
  *
  * 只输出 <img> 标签，由 MarkdownContent 组件解析为 ZoomableImage
  */
-renderer.image = function ({ href, title, text }: { href: string; title?: string; text: string }) {
+renderer.image = function ({ href, title, text }: { href: string; title?: string | null; text: string }) {
   const titleAttr = title ? ` title="${title}"` : '';
   return `<img src="${href}" alt="${text}" loading="lazy"${titleAttr} />`;
 };
@@ -169,7 +162,7 @@ renderer.image = function ({ href, title, text }: { href: string; title?: string
 /**
  * 链接渲染 - 自动处理内部/外部链接
  */
-renderer.link = function ({ href, title, text }: { href: string; title?: string; text: string }) {
+renderer.link = function ({ href, title, text }: { href: string; title?: string | null; text: string }) {
   const isExternal = href.startsWith('http://') || href.startsWith('https://');
   const titleAttr = title ? ` title="${title}"` : '';
   const targetAttr = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
@@ -179,8 +172,10 @@ renderer.link = function ({ href, title, text }: { href: string; title?: string;
 /**
  * 表格渲染 - 包裹在响应式容器中
  */
-renderer.table = function ({ header, body }: { header: string; body: string }) {
-  return `<div class="table-wrapper"><table><thead>${header}</thead><tbody>${body}</tbody></table></div>`;
+renderer.table = function (token: { header: string; rows: string[][] }) {
+  const headerHtml = token.header;
+  const bodyHtml = token.rows.map(row => `<tr>${row.join('')}</tr>`).join('');
+  return `<div class="table-wrapper"><table><thead>${headerHtml}</thead><tbody>${bodyHtml}</tbody></table></div>`;
 };
 
 // ============================================================================
@@ -192,7 +187,6 @@ marked.setOptions({
   gfm: true,            // GitHub Flavored Markdown
   breaks: false,         // 不将单个换行转为 <br>（标准 Markdown 行为）
   pedantic: false,       // 不使用原始 Markdown.pl 行为
-  smartypants: false,    // 不将引号等转为智能标点
 });
 
 // ============================================================================
@@ -215,6 +209,46 @@ function generateSlug(text: string): string {
     .replace(/-+/g, '-')           // 多个连字符转单个
     .replace(/^-+|-+$/g, '');      // 移除首尾连字符
 }
+
+// ============================================================================
+// sanitize-html 配置（替代 DOMPurify + jsdom）
+// ============================================================================
+
+/**
+ * sanitize-html 允许的标签和属性配置
+ *
+ * 与原 DOMPurify 配置完全对齐，确保功能不丢失
+ */
+const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: [
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'p', 'br', 'hr',
+    'ul', 'ol', 'li',
+    'a', 'strong', 'em', 'del', 's',
+    'blockquote',
+    'pre', 'code',
+    'table', 'thead', 'tbody', 'tr', 'th', 'td',
+    'img',
+    'div', 'span',
+    'input',  // 用于任务列表的 checkbox
+    'button', 'svg', 'rect', 'path',  // 用于代码复制按钮
+    'sup', 'sub',  // 上标下标
+  ],
+  allowedAttributes: {
+    '*': ['class', 'id', 'style'],
+    'a': ['href', 'target', 'rel', 'title'],
+    'img': ['src', 'alt', 'loading', 'title'],
+    'input': ['type', 'checked', 'disabled'],
+    'button': ['onclick', 'class'],
+    'svg': ['viewBox', 'fill', 'stroke', 'stroke-width', 'width', 'height', 'class'],
+    'rect': ['x', 'y', 'rx', 'ry', 'width', 'height', 'fill', 'stroke', 'stroke-width'],
+    'path': ['d', 'fill', 'stroke', 'stroke-width'],
+    'td': ['align', 'valign'],
+    'th': ['align', 'valign'],
+  },
+  // 允许 svg 中的 path、rect 等自闭合标签
+  selfClosing: ['img', 'br', 'hr', 'input', 'rect'],
+};
 
 // ============================================================================
 // 公开 API（保持与原版完全兼容）
@@ -258,7 +292,8 @@ export function parseFrontmatter(content: string): { frontmatter: MarkdownFrontm
  * - 自动链接
  *
  * 【安全】
- * 使用 DOMPurify 清理 HTML，防止 XSS 攻击
+ * 使用 sanitize-html 清理 HTML，防止 XSS 攻击
+ * （替换了 jsdom + dompurify，彻底解决 Vercel 上的 ESM 兼容问题）
  *
  * @param markdown - Markdown 文本（不含 frontmatter）
  * @returns 安全的 HTML 字符串
@@ -269,32 +304,8 @@ export async function markdownToHtml(markdown: string): Promise<string> {
   // 使用 marked 解析（返回 Promise）
   const rawHtml = await marked(normalizedMarkdown);
 
-  // DOMPurify 清理：允许有用的标签和属性
-  const cleanHtml = purify.sanitize(rawHtml, {
-    ALLOWED_TAGS: [
-      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-      'p', 'br', 'hr',
-      'ul', 'ol', 'li',
-      'a', 'strong', 'em', 'del', 's',
-      'blockquote',
-      'pre', 'code',
-      'table', 'thead', 'tbody', 'tr', 'th', 'td',
-      'img',
-      'div', 'span',
-      'input',  // 用于任务列表的 checkbox
-      'button', 'svg', 'rect', 'path',  // 用于代码复制按钮
-      'sup', 'sub',  // 上标下标
-    ],
-    ALLOWED_ATTR: [
-      'href', 'target', 'rel', 'title',
-      'src', 'alt', 'loading',
-      'id', 'class',
-      'type', 'checked', 'disabled',  // 用于 checkbox 和 button
-      'viewBox', 'fill', 'stroke', 'stroke-width', 'width', 'height', 'd', 'x', 'y', 'rx', 'ry',
-      'onclick',  // 代码复制按钮
-      'style',
-    ],
-  });
+  // sanitize-html 清理：纯字符串操作，无需 DOM 环境
+  const cleanHtml = sanitizeHtml(rawHtml, SANITIZE_OPTIONS);
 
   return cleanHtml;
 }
