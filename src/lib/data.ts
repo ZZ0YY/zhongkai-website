@@ -27,7 +27,7 @@ import {
 // ============================================================================
 // ISR 配置 - 60秒重新验证
 // ============================================================================
-export const revalidate = 60;
+export const revalidate = 7200;
 
 // ============================================================================
 // 博客 URL 配置（统一配置，便于维护）
@@ -139,7 +139,7 @@ async function fetchHexoPosts(): Promise<HexoPost[]> {
     console.log(`[数据中心] 正在获取博客数据: ${HEXO_API_URL}`);
     
     const response = await fetch(HEXO_API_URL, {
-      next: { revalidate: 60 },
+      next: { revalidate: 7200 },
       headers: {
         'Accept': 'application/json',
       },
