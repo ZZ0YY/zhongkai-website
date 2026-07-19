@@ -21,14 +21,24 @@ import { marked } from 'marked';
 import { markedHighlight } from 'marked-highlight';
 import hljs from 'highlight.js';
 import matter from 'gray-matter';
-import DOMPurify from 'dompurify';
-import { JSDOM } from 'jsdom';
 
 // ============================================================================
-// DOMPurify 初始化（服务端使用 JSDOM）
+// DOMPurify 懒初始化（动态导入 jsdom，避免 Vercel 构建报错）
 // ============================================================================
-const purifyWindow = new JSDOM('').window;
-const purify = DOMPurify(purifyWindow as unknown as Window);
+// jsdom 是纯 Node.js 模块，不能被 Next.js 打包进客户端 bundle。
+// 改为动态 import，只在服务端实际调用时才加载。
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let purifyInstance: any = null;
+
+async function getPurify() {
+  if (purifyInstance) return purifyInstance;
+  const { JSDOM } = await import('jsdom');
+  const purifyWindow = new JSDOM('').window;
+  const DOMPurify = (await import('dompurify')).default;
+  purifyInstance = DOMPurify(purifyWindow as unknown as Window);
+  return purifyInstance;
+}
 
 // ============================================================================
 // 类型定义（保持与原版完全兼容）
@@ -300,6 +310,7 @@ export async function markdownToHtml(markdown: string): Promise<string> {
   const rawHtml = await marked(normalizedMarkdown);
 
   // DOMPurify 清理：允许有用的标签和属性
+  const purify = await getPurify();
   const cleanHtml = purify.sanitize(rawHtml, {
     ALLOWED_TAGS: [
       'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
