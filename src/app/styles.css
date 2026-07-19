@@ -1,0 +1,190 @@
+/* ============================================================
+   zhongkai-website 补丁样式
+   功能：暗色模式变量 + @tailwindcss/typography 暗色适配 + KaTeX + TOC
+   ============================================================ */
+
+/* ---------- 1. @tailwindcss/typography 暗色模式覆盖 ---------- */
+/* 当 html 或上层元素带 .dark 类时，prose 自动切换暗色 */
+
+.dark .prose {
+  --tw-prose-body: theme('colors.gray.300');
+  --tw-prose-headings: theme('colors.gray.100');
+  --tw-prose-lead: theme('colors.gray.400');
+  --tw-prose-links: theme('colors.primary.400');
+  --tw-prose-bold: theme('colors.gray.100');
+  --tw-prose-counters: theme('colors.gray.400');
+  --tw-prose-bullets: theme('colors.gray.500');
+  --tw-prose-hr: theme('colors.gray.700');
+  --tw-prose-quotes: theme('colors.gray.300');
+  --tw-prose-quote-borders: theme('colors.primary.500');
+  --tw-prose-captions: theme('colors.gray.400');
+  --tw-prose-code: theme('colors.gray.100');
+  --tw-prose-pre-code: theme('colors.gray.300');
+  --tw-prose-pre-bg: theme('colors.gray.800');
+  --tw-prose-th-borders: theme('colors.gray.600');
+  --tw-prose-td-borders: theme('colors.gray.700');
+}
+
+.dark .prose a {
+  color: var(--tw-prose-links);
+  text-decoration-color: theme('colors.primary.700');
+}
+.dark .prose a:hover {
+  color: theme('colors.primary.300');
+}
+
+/* ---------- 2. 暗色模式：全局覆盖 ---------- */
+
+.dark {
+  color-scheme: dark;
+}
+
+/* 背景色 */
+.dark body {
+  background-color: theme('colors.gray.950');
+  color: theme('colors.gray.200');
+}
+
+/* 卡片 / 面板 */
+.dark .card,
+.dark .panel {
+  background-color: theme('colors.gray.900');
+  border-color: theme('colors.gray.700');
+}
+
+/* 页面头部 */
+.dark .page-header {
+  background-color: theme('colors.gray.900');
+  border-bottom-color: theme('colors.gray.700');
+}
+
+/* ---------- 3. KaTeX 公式样式 ---------- */
+
+/* 行内公式不要撑开行高 */
+.katex-display {
+  margin: 1.5em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5em 0;
+}
+
+.katex-display > .katex {
+  text-align: center;
+}
+
+/* 暗色模式下 KaTeX 文字颜色 */
+.dark .katex {
+  color: theme('colors.gray.200');
+}
+
+/* ---------- 4. TOC 目录组件 ---------- */
+
+.toc-container {
+  width: 220px;
+  margin-left: 2rem;
+  flex-shrink: 0;
+}
+
+/* ---------- 5. 代码块暗色模式 ---------- */
+
+.dark pre {
+  background-color: theme('colors.gray.800') !important;
+  border-color: theme('colors.gray.700');
+}
+
+.dark code {
+  color: theme('colors.gray.300');
+}
+
+/* 行内 code 背景 */
+.dark :not(pre) > code {
+  background-color: theme('colors.gray.800');
+  color: theme('colors.primary.300');
+  border-color: theme('colors.gray.700');
+}
+
+/* ---------- 6. 表格暗色模式 ---------- */
+
+.dark table {
+  border-color: theme('colors.gray.700');
+}
+
+.dark th {
+  background-color: theme('colors.gray.800');
+  color: theme('colors.gray.200');
+  border-color: theme('colors.gray.600');
+}
+
+.dark td {
+  border-color: theme('colors.gray.700');
+}
+
+.dark tr:nth-child(even) {
+  background-color: theme('colors.gray.800 / 50%');
+}
+
+/* ---------- 7. 引用块暗色模式（note/tip/warning/caution） ---------- */
+
+.dark .note,
+.dark .tip,
+.dark .warning,
+.dark .caution {
+  border-color: theme('colors.gray.600');
+}
+
+.dark .note {
+  background-color: theme('colors.blue.900 / 20%');
+}
+.dark .tip {
+  background-color: theme('colors.green.900 / 20%');
+}
+.dark .warning {
+  background-color: theme('colors.yellow.900 / 20%');
+}
+.dark .caution {
+  background-color: theme('colors.red.900 / 20%');
+}
+
+/* ---------- 8. 图片缩放组件暗色 ---------- */
+
+.dark figure.zoomable-image-wrapper {
+  background-color: theme('colors.gray.800');
+}
+
+.dark figcaption {
+  color: theme('colors.gray.400');
+}
+
+/* ---------- 9. 搜索框暗色 ---------- */
+
+.dark input[type="search"],
+.dark input[type="text"] {
+  background-color: theme('colors.gray.800');
+  border-color: theme('colors.gray.600');
+  color: theme('colors.gray.200');
+}
+
+.dark input[type="search"]::placeholder,
+.dark input[type="text"]::placeholder {
+  color: theme('colors.gray.500');
+}
+
+/* ---------- 10. 滚动条暗色美化 ---------- */
+
+.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: theme('colors.gray.900');
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: theme('colors.gray.600');
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.gray.500');
+}

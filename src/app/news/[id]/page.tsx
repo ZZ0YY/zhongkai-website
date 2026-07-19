@@ -1,21 +1,28 @@
 /**
  * ============================================================================
- * 新闻详情页面 - 修复版
+ * 新闻详情页面 - 增强版
  * ============================================================================
  *
- * 【修复】同 events/[id]/page.tsx，添加防御性代码防止构建时崩溃
+ * 【新增功能】
+ * 1. TOC 目录导航（侧边栏）
+ * 2. 上下篇导航（prev/next）
+ * 3. 暗色模式支持
+ * 4. @tailwindcss/typography prose 样式
+ * 5. KaTeX 数学公式渲染
  */
 
 import { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { PageHeader, MarkdownRenderer } from "@/components/school";
+import { PageHeader } from "@/components/school";
+import { MarkdownRenderer } from "@/components/school/MarkdownRenderer";
 import { SCHOOL_INFO, SITE_CONFIG, BLOG_URL, getPostById, getCombinedPosts } from "@/lib/data";
 import { getMarkdownContent, parseFrontmatter, markdownToHtml } from "@/lib/markdown";
 import { generateBreadcrumbJsonLd, generateSeoTitle, generateCanonicalUrl } from "@/lib/seo";
+import type { HeadingItem } from "@/lib/markdown";
 
-// 【关键修复 1】构建失败的页面回退到请求时动态渲染
+// 构建失败的页面回退到请求时动态渲染
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
@@ -80,6 +87,21 @@ export async function generateMetadata({
   }
 }
 
+/** 从 HTML 中提取标题列表（用于 TOC） */
+function extractHeadingsFromHtml(html: string): HeadingItem[] {
+  const headings: HeadingItem[] = [];
+  const regex = /<h([1-6])[^>]*id="([^"]*)"[^>]*>(.*?)<\/h\1>/g;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(html)) !== null) {
+    headings.push({
+      level: parseInt(match[1], 10),
+      id: match[2],
+      text: match[3].replace(/<[^>]*>/g, ''),
+    });
+  }
+  return headings;
+}
+
 export default async function NewsDetailPage({
   params
 }: {
@@ -96,21 +118,41 @@ export default async function NewsDetailPage({
     return notFound();
   }
 
-  // 【关键修复】return notFound() 确保中断执行
   if (!post) {
     return notFound();
   }
 
   const isRemote = post._source === 'remote';
 
+  // ========== 解析 Markdown，获取 HTML + headings ==========
   const mdContent = await getMarkdownContent('news', id);
 
   let finalHtml = '';
+  let headings: HeadingItem[] = [];
+
   if (mdContent.exists && mdContent.html) {
     finalHtml = mdContent.html;
+    headings = extractHeadingsFromHtml(finalHtml);
   } else if (post.content) {
     const { content: cleanContent } = parseFrontmatter(post.content);
     finalHtml = await markdownToHtml(cleanContent);
+    headings = extractHeadingsFromHtml(finalHtml);
+  }
+
+  // ========== 获取上下篇文章 ==========
+  let prevPost: { id: string; title: string } | null = null;
+  let nextPost: { id: string; title: string } | null = null;
+  try {
+    const allPosts = await getCombinedPosts('news');
+    const currentIndex = allPosts.findIndex(p => p.id.toString() === id);
+    if (currentIndex > 0) {
+      prevPost = { id: allPosts[currentIndex - 1].id.toString(), title: allPosts[currentIndex - 1].title };
+    }
+    if (currentIndex < allPosts.length - 1) {
+      nextPost = { id: allPosts[currentIndex + 1].id.toString(), title: allPosts[currentIndex + 1].title };
+    }
+  } catch {
+    // 上下篇获取失败不影响页面渲染
   }
 
   let blogPostUrl = BLOG_URL;
@@ -125,8 +167,7 @@ export default async function NewsDetailPage({
     ? mdContent.frontmatter.title
     : post.title;
 
-  // 【关键修复】防御性默认值
-  // 确保 postDate 始终是字符串（远程 API 可能返回 Date 对象）
+  // 防御性默认值：确保 postDate 始终是字符串
   const rawDate = post.date;
   const postDate = rawDate
     ? (typeof rawDate === 'string' ? rawDate : new Date(rawDate).toISOString().split('T')[0])
@@ -167,20 +208,20 @@ export default async function NewsDetailPage({
 
       <PageHeader title={post.category || '新闻动态'} subtitle={title} bgImage={post.image || ''} as="h2" />
 
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
 
-            <Link href="/news" prefetch={false} className="inline-flex items-center text-zk-blue hover:text-zk-red mb-8">
+            <Link href="/news" prefetch={false} className="inline-flex items-center text-zk-blue hover:text-zk-red dark:text-blue-400 dark:hover:text-blue-300 mb-8">
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               返回新闻列表
             </Link>
 
-            <h1 className="text-3xl md:text-4xl font-bold font-serif-sc text-gray-900 mb-6">{title}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold font-serif-sc text-gray-900 dark:text-gray-100 mb-6">{title}</h1>
 
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-8 pb-8 border-b border-gray-200">
+            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
               {post.category && (
                 <span className="bg-zk-red text-white px-3 py-1 rounded-full text-xs font-bold">
                   {post.category}
@@ -203,43 +244,103 @@ export default async function NewsDetailPage({
 
               <span className={`px-2 py-1 rounded text-xs ${
                 isRemote
-                  ? 'bg-blue-100 text-zk-blue'
-                  : 'bg-green-100 text-green-600'
+                  ? 'bg-blue-100 text-zk-blue dark:bg-blue-900/30 dark:text-blue-400'
+                  : 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
               }`}>
                 {isRemote ? '来自博客' : '本地文章'}
               </span>
             </div>
 
-            <div className="mb-8 rounded-lg overflow-hidden relative aspect-video bg-gray-100">
+            <div className="mb-8 rounded-lg overflow-hidden relative aspect-video bg-gray-100 dark:bg-gray-800">
               <Image src={post.image || ''} alt={title} fill sizes="100vw" className="object-cover" priority />
             </div>
 
+            {/* 使用新版 MarkdownRenderer（集成 TOC + KaTeX + prose） */}
             {finalHtml ? (
-              <MarkdownRenderer html={finalHtml} />
+              <MarkdownRenderer
+                htmlContent={finalHtml}
+                headings={headings}
+                showToc={true}
+                showPrevNext={false}
+              />
             ) : (
-              <div className="prose prose-lg max-w-none">
+              <div className="prose prose-lg max-w-none dark:prose-invert">
                 <div dangerouslySetInnerHTML={{ __html: post.content?.replace(/\n/g, '<br />') || post.summary || '' }} />
               </div>
             )}
 
             {post.tags && post.tags.length > 0 && (
-              <div className="mt-8 pt-8 border-t border-gray-200">
-                <span className="text-sm text-gray-500 mr-2">标签：</span>
+              <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+                <span className="text-sm text-gray-500 dark:text-gray-400 mr-2">标签：</span>
                 {post.tags.map((tag, index) => (
-                  <span key={index} className="inline-block px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm mr-2 mb-2">{tag}</span>
+                  <Link
+                    key={index}
+                    href={`/tags/${encodeURIComponent(tag)}`}
+                    className="inline-block px-3 py-1 bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 rounded-full text-sm mr-2 mb-2 hover:bg-zk-blue hover:text-white dark:hover:bg-zk-blue dark:hover:text-white transition-colors"
+                  >
+                    {tag}
+                  </Link>
                 ))}
               </div>
             )}
 
+            {/* 上下篇导航 */}
+            {(prevPost || nextPost) && (
+              <nav className="mt-12 border-t border-gray-200 dark:border-gray-700 pt-6">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="flex items-center">
+                    {prevPost ? (
+                      <Link
+                        href={`/news/${prevPost.id}`}
+                        className="group flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 p-4 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:hover:border-blue-600 dark:hover:bg-blue-900/20 w-full"
+                      >
+                        <svg className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-zk-blue dark:group-hover:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                        <div className="min-w-0">
+                          <span className="block text-xs text-gray-500 dark:text-gray-400">上一篇</span>
+                          <span className="block truncate text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-zk-blue dark:group-hover:text-blue-400">
+                            {prevPost.title}
+                          </span>
+                        </div>
+                      </Link>
+                    ) : (
+                      <div className="flex-1" />
+                    )}
+                  </div>
+                  <div className="flex items-center justify-end">
+                    {nextPost ? (
+                      <Link
+                        href={`/news/${nextPost.id}`}
+                        className="group flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-right transition-colors hover:border-blue-300 hover:bg-blue-50 dark:hover:border-blue-600 dark:hover:bg-blue-900/20 w-full"
+                      >
+                        <div className="min-w-0">
+                          <span className="block text-xs text-gray-500 dark:text-gray-400">下一篇</span>
+                          <span className="block truncate text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-zk-blue dark:group-hover:text-blue-400">
+                            {nextPost.title}
+                          </span>
+                        </div>
+                        <svg className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-zk-blue dark:group-hover:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </Link>
+                    ) : (
+                      <div className="flex-1" />
+                    )}
+                  </div>
+                </div>
+              </nav>
+            )}
+
             {isRemote && (
-              <div className="mt-12 p-6 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="mt-12 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div>
-                    <h3 className="font-bold text-gray-900 mb-1">这篇文章来自博客</h3>
-                    <p className="text-sm text-gray-600">点击下方按钮查看博客原贴，获取更多内容</p>
+                    <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-1">这篇文章来自博客</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">点击下方按钮查看博客原贴，获取更多内容</p>
                   </div>
                   <Link href={blogPostUrl} target="_blank" rel="noopener noreferrer"
-                    className="px-6 py-3 bg-zk-blue text-white font-bold rounded-lg hover:bg-blue-800 transition-colors">
+                    className="px-6 py-3 bg-zk-blue text-white font-bold rounded-lg hover:bg-blue-800 dark:hover:bg-blue-700 transition-colors">
                     查看博客原贴 →
                   </Link>
                 </div>
@@ -247,12 +348,12 @@ export default async function NewsDetailPage({
             )}
 
             {!isRemote && (
-              <div className="mt-12 p-6 bg-green-50 rounded-lg border border-green-200">
+              <div className="mt-12 p-6 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                 <div className="flex items-center">
-                  <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-green-600 dark:text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span className="text-green-700">这是官网原创文章</span>
+                  <span className="text-green-700 dark:text-green-400">这是官网原创文章</span>
                 </div>
               </div>
             )}

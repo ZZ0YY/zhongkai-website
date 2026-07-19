@@ -4,6 +4,8 @@
  */
 
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* 自定义主题变量 */
 @theme {
@@ -81,10 +83,7 @@ html {
 
 /* ============================================================================
  * Markdown 图片 CLS 防护（后备路径）
- * ============================================================================
- * 【说明】MarkdownRenderer 的正文图片已通过 ZoomableImage 组件处理（自带 CLS 防护 + Lightbox）。
- * 以下规则仅作用于非 MarkdownRenderer 渲染的 .prose img（如详情页的后备 dangerouslySetInnerHTML 路径）。
- */
+ * ============================================================================ */
 .prose img {
   min-height: 200px;
   background-color: #f3f4f6;
@@ -99,13 +98,10 @@ html {
 /* ============================================================================
  * Lightbox / 图片放大查看 辅助样式
  * ============================================================================ */
-
-/* 确保放大层能覆盖所有页面内容（包括 Header 的 z-index） */
 .lightbox-overlay {
   z-index: 9999;
 }
 
-/* 放大层打开时，禁止 body 滚动（由 JS 控制，此处作为防御性补充） */
 body.lightbox-open {
   overflow: hidden;
 }
@@ -114,7 +110,6 @@ body.lightbox-open {
  * ============================================================================
  * Markdown 增强样式 (v2) - 惠州仲恺中学官网
  * ============================================================================
- *
  * 【使用说明】
  * 将以下 CSS 内容追加到 src/app/globals.css 文件末尾即可。
  * 不要替换现有样式，只在原有 globals.css 的末尾添加这些新样式。
@@ -174,7 +169,7 @@ body.lightbox-open {
   @apply !bg-transparent !p-0 !text-sm;
 }
 
-/* 行内代码样式优化（已有 prose-code，这里只补充） */
+/* 行内代码样式优化 */
 .prose code:not(pre code) {
   @apply before:content-[''] after:content-[''];
 }
@@ -182,11 +177,9 @@ body.lightbox-open {
 /* ============================================================================
  * 标题锚点链接样式
  * ============================================================================ */
-
-/* 标题 hover 时显示链接图标 */
 .content-header {
   position: relative;
-  scroll-margin-top: 80px; /* 偏移 Header 高度 */
+  scroll-margin-top: 80px;
 }
 
 .content-header-link {
@@ -206,7 +199,6 @@ body.lightbox-open {
 /* ============================================================================
  * 表格响应式容器
  * ============================================================================ */
-
 .table-wrapper {
   @apply my-6 overflow-x-auto rounded-lg;
   @apply border border-gray-200;
@@ -234,8 +226,6 @@ body.lightbox-open {
 /* ============================================================================
  * 任务列表样式 (GFM)
  * ============================================================================ */
-
-/* GFM 任务列表的复选框 */
 .prose input[type="checkbox"] {
   @apply mr-2;
   @apply w-4 h-4;
@@ -244,36 +234,22 @@ body.lightbox-open {
   @apply accent-zk-blue;
 }
 
-/* 已完成的任务列表项 */
 .prose li:has(input[type="checkbox"]:checked) {
   @apply text-gray-400 line-through;
 }
 
-/* 任务列表去掉默认列表标记 */
 .prose ul:has(input[type="checkbox"]) {
   @apply list-none pl-0;
 }
 
 /* ============================================================================
  * GFM 告示框样式 (GitHub 风格)
- * ============================================================================
- * 支持 Markdown 中的以下语法：
- *   > [!NOTE] 标题
- *   > 内容
- *   > [!TIP] / [!IMPORTANT] / [!WARNING] / [!CAUTION]
- *
- * 注意：这需要 marked 支持。如果 marked 版本不支持 GitHub Alert，
- *   可以在 markdown.ts 中添加 remark-github-blockquote-alert 插件。
- *   或者用简单的 CSS 选择器实现类似效果。
  * ============================================================================ */
-
-/* 告示框基础样式 */
 .prose blockquote {
   @apply border-l-4 !p-4;
   @apply rounded-r-lg;
 }
 
-/* GitHub 风格告示框的替代方案（使用 data 属性或 CSS class） */
 .prose blockquote.note,
 .prose blockquote[data-type="note"] {
   @apply border-l-blue-500 bg-blue-50;
@@ -297,13 +273,11 @@ body.lightbox-open {
 /* ============================================================================
  * highlight.js 主题覆盖（One Dark 风格，适配学校网站配色）
  * ============================================================================ */
-
 .hljs {
   @apply bg-gray-900 text-gray-100;
   @apply !p-0;
 }
 
-/* 基础 token 颜色 */
 .hljs-comment,
 .hljs-quote {
   color: #5c6370;
@@ -374,7 +348,6 @@ body.lightbox-open {
 /* ============================================================================
  * 脚注样式
  * ============================================================================ */
-
 .prose .footnotes {
   @apply mt-12 pt-6;
   @apply border-t border-gray-200;
@@ -392,7 +365,6 @@ body.lightbox-open {
 /* ============================================================================
  * 删除线样式 (GFM)
  * ============================================================================ */
-
 .prose del,
 .prose s {
   @apply text-gray-400;
@@ -401,7 +373,6 @@ body.lightbox-open {
 /* ============================================================================
  * 滚动条美化（代码块横向滚动）
  * ============================================================================ */
-
 .code-block-wrapper pre::-webkit-scrollbar,
 .table-wrapper::-webkit-scrollbar {
   @apply h-2;
@@ -423,4 +394,198 @@ body.lightbox-open {
 
 .table-wrapper::-webkit-scrollbar-thumb {
   @apply bg-gray-300 rounded;
+}
+
+/* ============================================================================
+ * 暗色模式：@tailwindcss/typography prose-invert 覆盖
+ * ============================================================================ */
+.dark .prose {
+  --tw-prose-body: theme('colors.gray.300');
+  --tw-prose-headings: theme('colors.gray.100');
+  --tw-prose-lead: theme('colors.gray.400');
+  --tw-prose-links: theme('colors.blue.400');
+  --tw-prose-bold: theme('colors.gray.100');
+  --tw-prose-counters: theme('colors.gray.400');
+  --tw-prose-bullets: theme('colors.gray.500');
+  --tw-prose-hr: theme('colors.gray.700');
+  --tw-prose-quotes: theme('colors.gray.300');
+  --tw-prose-quote-borders: theme('colors.blue.500');
+  --tw-prose-captions: theme('colors.gray.400');
+  --tw-prose-code: theme('colors.gray.100');
+  --tw-prose-pre-code: theme('colors.gray.300');
+  --tw-prose-pre-bg: theme('colors.gray.800');
+  --tw-prose-th-borders: theme('colors.gray.600');
+  --tw-prose-td-borders: theme('colors.gray.700');
+}
+
+.dark .prose a {
+  color: var(--tw-prose-links);
+  text-decoration-color: theme('colors.blue.700');
+}
+.dark .prose a:hover {
+  color: theme('colors.blue.300');
+}
+
+/* ============================================================================
+ * 暗色模式：全局覆盖
+ * ============================================================================ */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: theme('colors.gray.950');
+  color: theme('colors.gray.200');
+}
+
+.dark .bg-white {
+  background-color: theme('colors.gray.900') !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: theme('colors.gray.800') !important;
+}
+
+.dark .text-gray-900 {
+  color: theme('colors.gray.100');
+}
+
+.dark .text-gray-700 {
+  color: theme('colors.gray.300');
+}
+
+.dark .text-gray-600 {
+  color: theme('colors.gray.400');
+}
+
+.dark .text-gray-500 {
+  color: theme('colors.gray.400');
+}
+
+.dark .border-gray-200 {
+  border-color: theme('colors.gray.700');
+}
+
+/* 暗色模式：代码块 */
+.dark pre {
+  background-color: theme('colors.gray.800') !important;
+  border-color: theme('colors.gray.700');
+}
+
+.dark code {
+  color: theme('colors.gray.300');
+}
+
+.dark :not(pre) > code {
+  background-color: theme('colors.gray.800');
+  color: theme('colors.blue.300');
+  border-color: theme('colors.gray.700');
+}
+
+/* 暗色模式：表格 */
+.dark table {
+  border-color: theme('colors.gray.700');
+}
+
+.dark th {
+  background-color: theme('colors.gray.800');
+  color: theme('colors.gray.200');
+  border-color: theme('colors.gray.600');
+}
+
+.dark td {
+  border-color: theme('colors.gray.700');
+}
+
+.dark tr:nth-child(even) {
+  background-color: theme('colors.gray.800 / 50%');
+}
+
+/* 暗色模式：告示框 */
+.dark .prose blockquote.note,
+.dark .prose blockquote[data-type="note"] {
+  @apply border-l-blue-400 bg-blue-900/20;
+}
+
+.dark .prose blockquote.tip,
+.dark .prose blockquote[data-type="tip"] {
+  @apply border-l-green-400 bg-green-900/20;
+}
+
+.dark .prose blockquote.warning,
+.dark .prose blockquote[data-type="warning"] {
+  @apply border-l-yellow-400 bg-yellow-900/20;
+}
+
+.dark .prose blockquote.caution,
+.dark .prose blockquote[data-type="caution"] {
+  @apply border-l-red-400 bg-red-900/20;
+}
+
+/* 暗色模式：图片 */
+.dark figure.zoomable-image-wrapper {
+  background-color: theme('colors.gray.800');
+}
+
+.dark figcaption {
+  color: theme('colors.gray.400');
+}
+
+/* 暗色模式：搜索框 */
+.dark input[type="search"],
+.dark input[type="text"] {
+  background-color: theme('colors.gray.800');
+  border-color: theme('colors.gray.600');
+  color: theme('colors.gray.200');
+}
+
+.dark input[type="search"]::placeholder,
+.dark input[type="text"]::placeholder {
+  color: theme('colors.gray.500');
+}
+
+/* 暗色模式：滚动条 */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: theme('colors.gray.900');
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: theme('colors.gray.600');
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.gray.500');
+}
+
+/* ============================================================================
+ * KaTeX 公式样式
+ * ============================================================================ */
+.katex-display {
+  margin: 1.5em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5em 0;
+}
+
+.katex-display > .katex {
+  text-align: center;
+}
+
+.dark .katex {
+  color: theme('colors.gray.200');
+}
+
+/* ============================================================================
+ * TOC 目录组件样式
+ * ============================================================================ */
+.toc-container {
+  width: 220px;
+  margin-left: 2rem;
+  flex-shrink: 0;
 }

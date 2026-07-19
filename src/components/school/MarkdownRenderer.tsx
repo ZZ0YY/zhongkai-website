@@ -1,80 +1,138 @@
+'use client'
+
 /**
  * ============================================================================
- * Markdown 内容渲染组件 (v2) - 惠州仲恺中学官网
+ * Markdown 内容渲染组件 (v3) - 惠州仲恺中学官网
  * ============================================================================
  *
- * 【升级说明】
- * 1. MarkdownContent 改为异步组件（因为 markdownToHtml 现在是异步的）
- * 2. 支持远程 Hexo 内容（来自 content.json API 的 raw Markdown）
- * 3. 保留 ZoomableImage 的 Lightbox 功能
- * 4. 新增：表格响应式、代码块增强、任务列表复选框样式
+ * 【v3 升级说明】
+ * 1. 集成 @tailwindcss/typography（prose 类替代手写样式）
+ * 2. 集成 TOC 目录导航
+ * 3. 集成 KaTeX 公式渲染 Provider
+ * 4. 支持暗色模式（dark:prose-invert）
+ * 5. 保留与 ZoomableImage/MarkdownContent 的兼容
  *
- * 【使用方法】
- * // 本地 Markdown 文件
- * import { MarkdownRenderer } from '@/components/school';
- * <MarkdownRenderer html={content.html} />
- *
- * // 远程 Hexo Markdown（新功能）
- * <MarkdownRenderer markdown={post.content} />
+ * 【向后兼容】
+ * 旧 API <MarkdownRenderer html={html} /> 仍然可用
  */
 
-import { MarkdownContent } from './ZoomableImage';
+import { useEffect, useRef } from 'react'
+import { MarkdownContent } from './ZoomableImage'
+import { TableOfContents } from './TableOfContents'
+import { PrevNextNav } from './PrevNextNav'
+import { KatexProvider } from './KatexProvider'
+import type { HeadingItem } from '@/lib/markdown'
 
 interface MarkdownRendererProps {
-  /** 转换后的 HTML 内容（原有 API，向后兼容） */
+  /** 已渲染的 HTML 内容（新 API） */
+  htmlContent?: string;
+  /** 已渲染的 HTML 内容（旧 API，向后兼容） */
   html?: string;
-  /** 原始 Markdown 文本（新 API，内部自动转 HTML） */
+  /** 原始 Markdown 文本（旧 API，已弃用） */
   markdown?: string;
+  /** 文章标题 */
+  title?: string;
+  /** 提取的标题列表（用于 TOC） */
+  headings?: HeadingItem[];
+  /** 上一篇 */
+  prev?: { id: string; title: string } | null;
+  /** 下一篇 */
+  next?: { id: string; title: string } | null;
+  /** 文章详情页的基础路径 */
+  basePath?: string;
+  /** 是否显示 TOC（默认 true） */
+  showToc?: boolean;
+  /** 是否显示上下篇导航（默认 false，由页面自己控制） */
+  showPrevNext?: boolean;
   /** 额外的 CSS 类名 */
   className?: string;
 }
 
-/**
- * Markdown 渲染组件
- *
- * 【v2 升级要点】
- * - 新增 markdown prop，支持传入原始 Markdown 文本
- * - 如果同时传入 html 和 markdown，优先使用 html
- * - 由于 markdownToHtml 是异步的，如果使用 markdown prop，
- *   需要在父组件中先 await markdownToHtml()，再传入 html
- */
-export function MarkdownRenderer({ html, className = '' }: MarkdownRendererProps) {
-  if (!html) {
+export function MarkdownRenderer({
+  htmlContent,
+  html: htmlLegacy,
+  title,
+  headings = [],
+  prev,
+  next,
+  basePath = '/news',
+  showToc = true,
+  showPrevNext = false,
+  className = '',
+}: MarkdownRendererProps) {
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  // 优先使用 htmlContent，兼容旧 html prop
+  const finalHtml = htmlContent || htmlLegacy || ''
+
+  // 为标题添加 id（如果 marked walkTokens 未生效的兜底）
+  useEffect(() => {
+    if (!contentRef.current) return
+    const headingsEl = contentRef.current.querySelectorAll('h1, h2, h3, h4, h5, h6')
+    headingsEl.forEach((el) => {
+      if (!el.id) {
+        el.id = el.textContent
+          ?.toLowerCase()
+          .replace(/[^\w\u4e00-\u9fff]+/g, '-')
+          .replace(/^-+|-+$/g, '') || ''
+      }
+    })
+  }, [finalHtml])
+
+  if (!finalHtml) {
     return null;
   }
 
-  const proseClasses = `prose prose-lg max-w-none
-    prose-headings:font-serif-sc prose-headings:text-gray-900
-    prose-h1:text-3xl prose-h1:border-b prose-h1:border-gray-200 prose-h1:pb-4
-    prose-h2:text-2xl prose-h2:text-zk-blue prose-h2:mt-8
-    prose-h3:text-xl prose-h3:text-zk-red
-    prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4
-    prose-a:text-zk-blue prose-a:no-underline hover:prose-a:underline
-    prose-strong:text-gray-900 prose-strong:font-bold
-    prose-blockquote:border-l-4 prose-blockquote:border-zk-gold prose-blockquote:bg-gray-50 prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:italic
-    prose-ul:list-disc prose-ul:pl-6
-    prose-ol:list-decimal prose-ol:pl-6
-    prose-li:text-gray-700 prose-li:mb-2
-    prose-code:bg-gray-100 prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-zk-red
-    prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto
-    prose-hr:border-gray-200 prose-hr:my-8
-    prose-table:w-full prose-table:border-collapse
-    prose-th:bg-gray-100 prose-th:p-3 prose-th:text-left prose-th:font-bold
-    prose-td:border prose-td:border-gray-200 prose-td:p-3
-    ${className}
-  `;
+  return (
+    <KatexProvider>
+      <div className="flex gap-8">
+        {/* 主内容区 */}
+        <div className="min-w-0 flex-1" ref={contentRef}>
+          <MarkdownContent
+            html={finalHtml}
+            className={`prose prose-lg max-w-none
+              prose-gray dark:prose-invert
+              prose-headings:scroll-mt-20
+              prose-headings:font-serif-sc
+              prose-a:text-zk-blue prose-a:no-underline hover:prose-a:underline
+              dark:prose-a:text-blue-400
+              prose-img:rounded-lg prose-img:shadow-md
+              prose-pre:bg-gray-900 prose-pre:text-gray-100
+              dark:prose-pre:bg-gray-800
+              prose-code:before:content-[''] prose-code:after:content-['']
+              prose-code:bg-gray-100 prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-zk-red
+              dark:prose-code:bg-gray-800 dark:prose-code:text-blue-300
+              prose-blockquote:border-l-4 prose-blockquote:border-zk-gold prose-blockquote:bg-gray-50
+              dark:prose-blockquote:border-blue-500 dark:prose-blockquote:bg-gray-800/50
+              prose-table:border-collapse
+              prose-th:bg-gray-50 dark:prose-th:bg-gray-800
+              ${className}
+            `}
+          />
 
-  return <MarkdownContent html={html} className={proseClasses} />;
+          {/* 上下篇导航 */}
+          {showPrevNext && (
+            <PrevNextNav prev={prev} next={next} basePath={basePath} />
+          )}
+        </div>
+
+        {/* 侧边 TOC */}
+        {showToc && headings.length > 0 && (
+          <TableOfContents headings={headings} />
+        )}
+      </div>
+    </KatexProvider>
+  )
 }
 
 /**
- * 空内容提示组件（保持不变）
+ * 空内容提示组件
  */
 export function EmptyContent({ message = '暂无详细内容' }: { message?: string }) {
   return (
-    <div className="text-center py-12 text-gray-500">
+    <div className="text-center py-12 text-gray-500 dark:text-gray-400">
       <svg
-        className="w-16 h-16 mx-auto mb-4 text-gray-300"
+        className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -92,7 +150,7 @@ export function EmptyContent({ message = '暂无详细内容' }: { message?: str
 }
 
 /**
- * 内容来源提示组件（保持不变）
+ * 内容来源提示组件
  */
 export function ContentMeta({
   date,
@@ -104,7 +162,7 @@ export function ContentMeta({
   tags?: string[];
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-8 pb-6 border-b border-gray-200">
+    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
       {date && (
         <span className="flex items-center">
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,7 +184,7 @@ export function ContentMeta({
           {tags.map((tag, index) => (
             <span
               key={index}
-              className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs"
+              className="px-2 py-1 bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 rounded text-xs"
             >
               {tag}
             </span>

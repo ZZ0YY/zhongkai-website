@@ -10,6 +10,8 @@ import { Header, Footer } from "@/components/school";
 import { SCHOOL_INFO, SITE_CONFIG, PAGE_CONFIGS } from "@/lib/data";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import "katex/dist/katex.min.css";
 
 // 判断是否为生产环境
 const isProd = process.env.NODE_ENV === 'production';
@@ -25,7 +27,10 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#1E3A8A',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#1E3A8A' },
+    { media: '(prefers-color-scheme: dark)', color: '#111827' },
+  ],
 };
 
 // 字体配置
@@ -128,13 +133,15 @@ export default function RootLayout({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
       />
       <body className={`${notoSansSC.variable} ${notoSerifSC.variable} font-sans antialiased`}>
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-grow pt-20">
-            {children}
-          </main>
-          <Footer />
-        </div>
+        <ThemeProvider>
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow pt-20">
+              {children}
+            </main>
+            <Footer />
+          </div>
+        </ThemeProvider>
         <Analytics />
         <SpeedInsights />
       </body>

@@ -8,3 +8,5 @@ export { default as PageHeader } from './PageHeader';
 export { default as ImageCarousel } from './ImageCarousel';
 export { MarkdownRenderer, EmptyContent, ContentMeta } from './MarkdownRenderer';
 export { ZoomableImage, MarkdownContent } from './ZoomableImage';
+export { default as ThemeSwitch } from './ThemeSwitch';
+export { default as TOC } from './TOC';
