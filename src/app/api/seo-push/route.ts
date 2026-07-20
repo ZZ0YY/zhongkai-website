@@ -44,7 +44,7 @@ export async function GET(request: Request) {
       ? Array.from(new Set([...staticUrls, ...dynamicUrls]))
       : Array.from(new Set([...staticUrls, ...dynamicUrls.slice(0, 10)]));
 
-    // 【百度逻辑】：每天滚动提取 10 条动态链接 + 基础静态页
+    // 【百度逻辑】：每日优先推送 10 条动态链接，不够再用静态页补齐
     // 计算当前是一年中的第几天 (0-365)
     const now = new Date();
     const start = new Date(now.getFullYear(), 0, 0);
@@ -52,29 +52,32 @@ export async function GET(request: Request) {
     const oneDay = 1000 * 60 * 60 * 24;
     const dayOfYear = Math.floor(diff / oneDay);
 
-    // 每次取 10 条，根据天数计算切片起点
     const baiduBatchSize = 10;
     let baiduDynamicUrls: string[] = [];
-    
+
     if (dynamicUrls.length > 0) {
       const startIndex = (dayOfYear * baiduBatchSize) % dynamicUrls.length;
-      
-      // 如果切片到了数组尾部不够 10 条，循环取头部的补齐
+  
+      // 按照天数偏移切片提取 10 条动态链接
       for (let i = 0; i < baiduBatchSize; i++) {
         const index = (startIndex + i) % dynamicUrls.length;
         baiduDynamicUrls.push(dynamicUrls[index]);
       }
     }
 
-    // 百度的最终推送列表（去重）
-    const baiduUrls = Array.from(new Set([...staticUrls, ...baiduDynamicUrls]));
+    // 优先拿满 10 条动态页；如果动态页不足 10 条，用静态页凑足 10 条
+    let finalBaiduUrls = baiduDynamicUrls;
+    if (finalBaiduUrls.length < baiduBatchSize) {
+      const needCount = baiduBatchSize - finalBaiduUrls.length;
+      finalBaiduUrls = Array.from(new Set([...finalBaiduUrls, ...staticUrls.slice(0, needCount)]));
+    }
 
-    // 3. 百度推送 (文本格式) - 使用计算出的 baiduUrls
+    // 3. 百度推送 (文本格式)
     const baiduUrl = `http://data.zz.baidu.com/urls?site=${baseUrl}&token=${process.env.BAIDU_TOKEN}`;
     const baiduPromise = fetch(baiduUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: baiduUrls.join('\n'),
+      body: finalBaiduUrls.join('\n'),
     }).then(res => res.json());
 
     // 4. IndexNow 推送 (JSON格式) - 使用原计划的 bingUrls
@@ -95,9 +98,9 @@ export async function GET(request: Request) {
       type: pushType === 'full' ? 'Full Push' : 'Latest Push',
       totalDynamicCount: dynamicUrls.length,
       baidu: {
-        pushedCount: baiduUrls.length,
+        pushedCount: finalBaiduUrls.length,
         baiduResult,
-        urls: baiduUrls // 方便调试查看今天百度推了哪 10 条
+        urls: finalBaiduUrls // 调试查看今天百度推了哪 10 条
       },
       bing: {
         pushedCount: bingUrls.length,
